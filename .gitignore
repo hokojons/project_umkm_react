@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+*/node_modules/
+
+# Build outputs
+dist/
+build/
+*.log
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Laravel specific
+Laravel/vendor/
+Laravel/.env
+Laravel/storage/*.key
+
+# Package locks (optional - remove if you want to keep them)
+# package-lock.json
+# composer.lock
