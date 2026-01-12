@@ -1,0 +1,158 @@
+================================
+SETUP WhatsApp Cloud API (GRATIS)
+================================
+
+STATUS: Ready untuk integrate
+
+================================
+LANGKAH-LANGKAH SETUP:
+================================
+
+STEP 1: Pergi ke Meta Developer Dashboard
+─────────────────────────────────────────
+1. Buka: https://developers.facebook.com/
+2. Login dengan akun Facebook/Meta
+3. Create new app atau gunakan existing app
+4. Pilih "WhatsApp" sebagai use case
+
+STEP 2: Setup WhatsApp Business Account
+───────────────────────────────────────
+1. Di app settings, pilih "WhatsApp" product
+2. Pilih "Cloud API" bukan "On-Premises API"
+3. Create Business Account atau link existing
+4. Verify phone number untuk testing
+
+STEP 3: Dapatkan Credentials
+────────────────────────────
+Dari settings, dapatkan:
+- Phone Number ID (Phone Number yang terverifikasi)
+- API Token (Permanent Access Token)
+- Business Account ID
+
+STEP 4: Update .env file
+────────────────────────
+File: Laravel/.env
+
+WHATSAPP_ENABLED=true
+WHATSAPP_API_MODE=test
+WHATSAPP_PHONE_NUMBER_ID=123456789123456789
+WHATSAPP_API_TOKEN=EAABsxxxxxxxxxxxxxxx
+WHATSAPP_BUSINESS_ACCOUNT_ID=xxxxxxxxxxxx
+
+STEP 5: Test Integration
+────────────────────────
+Run: php artisan tinker
+
+Dalam tinker:
+$service = new App\Services\WhatsAppOtpService();
+$result = $service->sendOtp('62812345678901', 'user');
+dd($result);
+
+Hasilnya akan terlihat:
+[
+  'success' => true,
+  'message' => 'OTP sent to WhatsApp',
+  'code' => '123456',
+  'whatsapp_sent' => true
+]
+
+================================
+TESTING PHASE (GRATIS):
+================================
+
+1. Menggunakan Sandbox Numbers
+   - Meta menyediakan sandbox number untuk testing
+   - Bisa receive message tanpa verify business
+   - Limit: 100 messages/hari
+
+2. Production Phase
+   - Verifikasi business account
+   - Tidak ada limit
+   - Setiap message bisa dicharge (tergantung rate)
+   - Rata-rata $0.05 per template message
+
+================================
+API ENDPOINTS YANG SUDAH UPDATE:
+================================
+
+✅ POST /api/auth/send-otp-register
+   - Sekarang akan send OTP via WhatsApp real
+   - Format: +62812345678901
+
+✅ POST /api/businesses/send-otp-register
+   - Sama seperti user registration
+
+✅ POST /api/orders
+   - Generate WhatsApp link untuk contact UMKM
+
+================================
+FITUR:
+================================
+
+✅ Send OTP via WhatsApp
+✅ Auto format phone number (62xxxx)
+✅ Error handling lengkap
+✅ Logging semua activity
+✅ Fallback jika WhatsApp not configured
+✅ Test mode support
+
+================================
+RESPONSE FORMAT:
+================================
+
+Success:
+{
+  "success": true,
+  "message": "OTP sent to WhatsApp",
+  "code": "123456",
+  "whatsapp_sent": true
+}
+
+Error (WhatsApp not configured):
+{
+  "success": false,
+  "message": "Failed to send OTP: WhatsApp not configured"
+}
+
+================================
+PRODUCTION CHECKLIST:
+================================
+
+[ ] Setup Meta Developer Account
+[ ] Create WhatsApp Business Account
+[ ] Verify phone number
+[ ] Get Phone Number ID
+[ ] Get API Token
+[ ] Update .env dengan credentials
+[ ] Set WHATSAPP_ENABLED=true
+[ ] Test dengan sandbox
+[ ] Deploy ke production
+[ ] Verify business account
+[ ] Update to production phone number
+
+================================
+RESOURCES:
+================================
+
+- Meta WhatsApp Cloud API Docs:
+  https://developers.facebook.com/docs/whatsapp/cloud-api/
+
+- Setup Guide:
+  https://developers.facebook.com/docs/whatsapp/cloud-api/get-started
+
+- Send Message API:
+  https://developers.facebook.com/docs/whatsapp/cloud-api/reference/message-object
+
+- Rate Limits & Pricing:
+  https://www.whatsapp.com/business/pricing/
+
+================================
+STATUS: READY FOR TESTING
+================================
+
+Sudah siap untuk:
+1. Testing dengan sandbox
+2. Production deployment
+3. Real WhatsApp OTP sending
+
+Tunggu aja credentials dari Meta, terus update .env!

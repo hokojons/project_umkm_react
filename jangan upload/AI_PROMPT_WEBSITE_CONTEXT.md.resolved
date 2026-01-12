@@ -1,0 +1,275 @@
+# AI PROMPT - PASAR UMKM MARKETPLACE CONTEXT
+
+**Copy prompt ini ke AI assistant lain untuk memberikan context lengkap tentang website Anda**
+
+---
+
+## 📋 PROMPT START
+
+Saya memiliki sebuah website **Pasar UMKM Marketplace** yang sudah berjalan. Berikut adalah informasi lengkap tentang sistem ini:
+
+### 🏗️ TECH STACK
+
+**Frontend:**
+- React 18 + TypeScript
+- Vite (build tool)
+- Tailwind CSS + Shadcn/ui
+- Axios untuk HTTP requests
+- React Context API untuk state management
+
+**Backend:**
+- Laravel 10.x (PHP 8.1+)
+- MySQL database (XAMPP)
+- RESTful JSON API
+- File upload ke local storage
+
+**Database:**
+- Database name: `dbumkm`
+- 19 tables total (14 main tables + 5 Laravel system tables)
+- Legacy naming convention dengan prefix `t` (contoh: `tpengguna`, `tumkm`, `tproduk`)
+
+### 📊 DATABASE STRUCTURE (PENTING)
+
+**Main Tables:**
+1. **tpengguna** - Users (kodepengguna PK, username, password, email, role: 'user'/'umkm')
+2. **tadmin** - Admins (kodeadmin PK, username, password, email)
+3. **tumkm** - UMKM Stores (kodepengajuan PK, kodepengguna FK, namatoko, deskripsitoko, fototoko, statuspengajuan: 'pending'/'active'/'rejected')
+4. **tproduk** - Products (kodeproduk PK, kodepengguna FK, namaproduk, harga, stok, gambarproduk, approval_status: 'pending'/'approved'/'rejected')
+5. **tkategori** - Categories (kodekategori PK, namakategori)
+6. **tkeranjang** - Shopping Cart (kodekeranjang PK, kodepengguna FK, kodeproduk FK, jumlah)
+7. **tpesanan** - Orders (kodepesanan PK, kodepengguna FK, totalharga, statuspesanan)
+8. **tdetailpesanan** - Order Items (kodedetail PK, kodepesanan FK, kodeproduk FK)
+9. **tacara** - Events (kodeacara PK, namaacara, tanggalmulai, kapasitas)
+10. **tpakethadiah** - Gift Packages (kodepaket PK, namapaket, harga)
+11. **product_rejection_comments** - Product rejection feedback (id PK, kodeproduk FK, comment)
+12. **umkm_rejection_comments** - Store rejection feedback (id PK, kodepengguna FK, comment)
+
+**ID Format:**
+- User: U001, U002, U003, ...
+- Admin: ADM001, ADM002, ...
+- Product: U001P001, U001P002 (user code + product number)
+- Category: CAT001, CAT002, ...
+
+### 🔐 AUTHENTICATION
+
+**Login Credentials:**
+- Admin: username `admin`, password `admin123`
+- Test UMKM: username `budi`, password `budi123`
+- Test User: username `andi`, password `andi123`
+
+**Role System:**
+- `user`: Hanya bisa belanja, request upgrade ke UMKM
+- `umkm`: Bisa manage toko/produk + belanja
+- `admin`: Full access (approve/reject, manage users)
+
+### 🎨 FITUR UTAMA
+
+1. **UMKM Dashboard** ([UMKMDashboard.tsx](file:///c:/Coding/Pak%20andre%20web/,/React/src/components/UMKMDashboard.tsx))
+   - Manage toko (nama, deskripsi, foto, kontak)
+   - Manage produk (tambah, edit, hapus)
+   - Upload foto produk (file upload, bukan base64)
+   - Lihat komentar penolakan dari admin
+
+2. **Admin Panel** ([AdminPanel.tsx](file:///c:/Coding/Pak%20andre%20web/,/React/src/components/AdminPanel.tsx))
+   - Review pengajuan UMKM pending
+   - Approve/reject toko dengan komentar
+   - Approve/reject produk individual dengan komentar
+   - Manage users, categories, gift packages, events
+
+3. **Product Approval System** (FITUR UNGGULAN)
+   - Admin bisa approve/reject produk per item (tidak harus semua)
+   - Komentar penolakan untuk setiap produk/toko
+   - UMKM owner bisa lihat komentar di dashboard
+   - Produk baru setelah toko disetujui = auto-approved
+
+4. **Shopping Cart**
+   - Grouped by business (checkout per UMKM)
+   - Real-time total calculation
+   - Persistent cart (localStorage + database)
+
+5. **Order Tracking**
+   - Multi-step progress (Pending → Paid → Processing → Shipped → Delivered)
+   - Status update by UMKM owner/admin
+
+6. **Event Management**
+   - Create/edit/delete events
+   - Event registration for UMKM
+   - Participant management
+
+7. **Gift Package System**
+   - Bundle produk menjadi paket hadiah
+   - Upload gambar paket
+   - Set harga paket
+
+### 📡 KEY API ENDPOINTS
+
+**Base URL:** `http://localhost:8000/api`
+
+**Authentication:**
+- POST `/auth/login` - Login user/UMKM/admin
+- GET `/auth/profile` - Get user profile
+
+**UMKM:**
+- GET `/umkm` - Get all active UMKM
+- GET `/umkm/pending` - Get pending UMKM (admin only)
+- GET `/umkm/my-umkm` - Get user's own UMKM
+- POST `/umkm/submit` - Submit UMKM store
+- POST `/umkm/{id}/approve-with-products` - Approve dengan kontrol per produk
+- GET `/umkm/rejection-comments` - Get rejection comments
+- POST `/umkm/add-product` - Add new product
+
+**Products:**
+- GET `/products/pending` - Get pending products (admin)
+- POST `/products/{id}/approve` - Approve product
+- POST `/products/{id}/reject` - Reject product with comment
+
+**Cart:**
+- GET `/cart/{userId}` - Get user cart
+- POST `/cart/add` - Add to cart
+- GET `/cart/{userId}/grouped` - Get cart grouped by business
+
+**Orders:**
+- POST `/orders/checkout` - Create order
+- GET `/orders` - Get user orders
+- PUT `/orders/{id}/status` - Update order status
+
+**Events:**
+- GET `/events` - Get all events
+- POST `/events/{id}/register` - Register to event
+
+**Categories:**
+- GET `/categories` - Get all categories
+
+**Gift Packages:**
+- GET `/gift-packages` - Get all packages
+
+### 🗂️ FILE STRUCTURE
+
+**Frontend (React):**
+```
+React/src/
+├── components/          # 89 TSX components
+│   ├── AdminPanel.tsx
+│   ├── UMKMDashboard.tsx
+│   ├── CartSidebar.tsx
+│   ├── EventManagement.tsx
+│   └── ui/              # Shadcn components
+├── services/            # API service layer
+│   ├── authService.ts
+│   ├── umkmService.ts
+│   └── productService.ts
+└── context/
+    ├── AuthContext.tsx
+    └── CartContext.tsx
+```
+
+**Backend (Laravel):**
+```
+Laravel/
+├── app/Http/Controllers/Api/
+│   ├── AuthController.php
+│   ├── UmkmController.php
+│   ├── UmkmApiController.php
+│   ├── ProductController.php
+│   ├── CartController.php
+│   └── EventController.php
+├── routes/api.php
+└── public/uploads/
+    ├── toko/            # Store photos
+    └── produk/          # Product images
+```
+
+### ✅ SISTEM STATUS
+
+**Test Results:** 10/10 Endpoints Passed ✅
+- Authentication: Working
+- UMKM Management: Working
+- Products: Working
+- Cart: Working
+- Events: Working
+- Categories: Working
+
+**Known Issues:**
+1. ❌ Event registration endpoint return 404 (perlu fix routing)
+2. ⚠️ Beberapa password masih plain text (perlu hash)
+3. ⚠️ Belum ada pagination di list endpoints
+4. ⚠️ Gambar upload belum di-optimize/resize
+
+### 🔧 RECENT FIXES
+
+1. **Upload Foto** - Dari base64 ke file upload (21-22 Des 2025)
+2. **Login Admin** - Fix syntax error (20 Des 2025)
+3. **Cart Grouped** - Cart dikelompokkan per UMKM (20 Des 2025)
+4. **Product Approval** - Approve/reject per produk dengan komentar (10 Jan 2026)
+5. **Database Recovery** - Tambah missing columns (10 Jan 2026)
+
+### 🎯 IMPROVEMENT NEEDS
+
+**Critical:**
+- Fix event registration 404 error
+- Implement proper password hashing
+- Add file upload validation
+- Configure CORS
+
+**High Priority:**
+- Database indexing untuk performa
+- Pagination untuk list endpoints
+- Image optimization (resize/compress)
+- Search & filter di backend
+
+**Medium Priority:**
+- Email notifications
+- Stock management (auto-reduce saat checkout)
+- Rating & review system
+- Admin analytics dashboard
+
+### 📍 PROJECT LOCATION
+
+- Frontend: `C:\Coding\Pak andre web\,\React`
+- Backend: `C:\Coding\Pak andre web\,\Laravel`
+- Database: XAMPP MySQL, database `dbumkm`
+
+### 🚀 HOW TO RUN
+
+**Backend:**
+```bash
+cd "C:\Coding\Pak andre web\,\Laravel"
+php artisan serve
+```
+
+**Frontend:**
+```bash
+cd "C:\Coding\Pak andre web\,\React"
+npm run dev
+```
+
+---
+
+## 📝 CONTEXT UNTUK AI
+
+Saya ingin Anda membantu saya dengan website ini. Anda sekarang sudah memahami:
+- Tech stack (React + Laravel + MySQL)
+- Database structure (19 tables dengan naming convention legacy)
+- Semua fitur utama (UMKM dashboard, admin panel, product approval, cart, tracking, events)
+- API endpoints yang tersedia
+- File structure frontend dan backend
+- Issues yang perlu diperbaiki
+
+**Tolong bantu saya untuk:** [TULIS REQUEST ANDA DI SINI]
+
+Contoh request:
+- "Fix error 404 di event registration endpoint"
+- "Implementasi pagination di endpoint GET /umkm"
+- "Buat fitur rating & review untuk produk"
+- "Optimize image upload dengan resize otomatis"
+- "Tambahkan email notification saat UMKM disetujui"
+
+---
+
+## PROMPT END
+
+**Cara Pakai:**
+1. Copy semua text dari "PROMPT START" sampai "PROMPT END"
+2. Paste ke AI assistant lain (ChatGPT, Claude, Gemini, dll)
+3. Tambahkan request spesifik Anda di bagian akhir
+4. AI akan memahami context lengkap website Anda dan bisa langsung membantu!

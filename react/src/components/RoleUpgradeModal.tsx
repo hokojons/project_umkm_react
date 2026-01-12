@@ -1,0 +1,274 @@
+import { useState, useEffect } from "react";
+import { X, AlertCircle } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
+import { toast } from "sonner";
+
+interface RoleUpgradeModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSuccess?: () => void;
+}
+
+export default function RoleUpgradeModal({
+  isOpen,
+  onClose,
+  onSuccess,
+}: RoleUpgradeModalProps) {
+  const { accessToken, refreshUser } = useAuth();
+  const [reason, setReason] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [existingRequest, setExistingRequest] = useState<any>(null);
+  const [checkingExisting, setCheckingExisting] = useState(true);
+  const [showConfirm, setShowConfirm] = useState(false);
+
+  // Check if user already has a pending/rejected request
+  useEffect(() => {
+    const checkExistingRequest = async () => {
+      try {
+        const currentUser = localStorage.getItem("pasar_umkm_current_user");
+        if (!currentUser) return;
+
+        const user = JSON.parse(currentUser);
+        
+        // Only check if user is umkm_owner (has already submitted UMKM)
+        // Skip for admin and customer to avoid 404 errors
+        if (user.role !== 'umkm_owner') {
+          setCheckingExisting(false);
+          return;
+        }
+
+        // Fetch existing role upgrade request for this user
+        const response = await fetch(
+          `http://localhost:8000/api/role-upgrade/user/${user.id}`
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.data) {
+            setExistingRequest(data.data);
+          }
+        }
+      } catch (error) {
+        console.error("Error checking existing request:", error);
+      } finally {
+        setCheckingExisting(false);
+      }
+    };
+
+    checkExistingRequest();
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!reason.trim()) {
+      toast.error("Mohon jelaskan alasan permintaan upgrade role");
+      return;
+    }
+
+    // Show confirm dialog if updating existing request
+    if (existingRequest && existingRequest.status !== "approved") {
+      setShowConfirm(true);
+      return;
+    }
+
+    // Proceed with submission
+    await submitRequest();
+  };
+
+  const submitRequest = async () => {
+    setShowConfirm(false);
+    setLoading(true);
+
+    try {
+      const currentUser = localStorage.getItem("pasar_umkm_current_user");
+      if (!currentUser) {
+        throw new Error("User tidak ditemukan");
+      }
+
+      const user = JSON.parse(currentUser);
+
+      // Request data untuk role upgrade (simplified)
+      const requestData = {
+        user_id: user.id,
+        reason: reason || "Ingin menjadi UMKM Owner", // Simple reason for role upgrade
+      };
+
+      const response = await fetch("http://localhost:8000/api/role-upgrade", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(accessToken && { Authorization: `Bearer ${accessToken}` }),
+        },
+        body: JSON.stringify(requestData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Gagal mengajukan permintaan");
+      }
+
+      // Show different message based on whether it's new or updated
+      const isUpdate = existingRequest && existingRequest.status !== "approved";
+      toast.success(
+        isUpdate
+          ? "Permintaan berhasil diperbarui! Tunggu persetujuan admin."
+          : "Permintaan upgrade role berhasil diajukan! Tunggu persetujuan admin."
+      );
+
+      // Refresh user data
+      if (refreshUser) {
+        await refreshUser();
+      }
+
+      onSuccess?.();
+      onClose();
+    } catch (error) {
+      console.error("Error submitting role upgrade:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Gagal mengajukan permintaan"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <>
+      {/* Custom Confirm Dialog */}
+      {showConfirm && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-[60]">
+          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full shadow-2xl">
+            <div className="p-6">
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0 w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
+                  <AlertCircle className="w-6 h-6 text-amber-600" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    Ganti Permintaan Sebelumnya?
+                  </h3>
+                  <p className="text-sm text-gray-600 mb-1">
+                    Anda sudah pernah mengajukan permintaan dengan status:{" "}
+                    <span className="font-semibold capitalize text-gray-900">
+                      {existingRequest.status}
+                    </span>
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    Mengajukan lagi akan menggantikan permintaan sebelumnya dan
+                    status akan kembali ke{" "}
+                    <span className="font-semibold">pending</span>.
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-gray-50 px-6 py-4 flex gap-3 justify-end rounded-b-lg">
+              <button
+                onClick={() => setShowConfirm(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
+              >
+                Batal
+              </button>
+              <button
+                onClick={submitRequest}
+                className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors"
+              >
+                Ya, Lanjutkan
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Main Modal */}
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+        <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
+          <div className="sticky top-0 bg-white dark:bg-gray-800 border-b dark:border-gray-700 p-4 flex items-center justify-between">
+            <h2 className="text-indigo-900">Ajukan Upgrade ke Role UMKM</h2>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          <form onSubmit={handleSubmit} className="p-6 space-y-4">
+            {/* Warning if user already has pending/rejected request */}
+            {!checkingExisting &&
+              existingRequest &&
+              existingRequest.status !== "approved" && (
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex gap-3">
+                  <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                  <div className="text-sm">
+                    <p className="text-amber-900 font-medium mb-1">
+                      Anda sudah pernah mengajukan permintaan
+                    </p>
+                    <p className="text-amber-700">
+                      Status saat ini:{" "}
+                      <span className="font-semibold capitalize">
+                        {existingRequest.status}
+                      </span>
+                      <br />
+                      Mengajukan lagi akan menggantikan permintaan sebelumnya
+                      dan status akan kembali ke "pending".
+                    </p>
+                  </div>
+                </div>
+              )}
+
+            <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
+              <h3 className="text-indigo-900 mb-2">Manfaat Role UMKM</h3>
+              <ul className="text-sm text-indigo-700 space-y-1">
+                <li>• Dapat menambah toko/stan UMKM sendiri</li>
+                <li>• Dapat menambah, edit, dan hapus produk Anda</li>
+                <li>• Tetap dapat berbelanja dari UMKM lain</li>
+                <li>• Mengelola bisnis secara mandiri</li>
+              </ul>
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="reason" className="block text-sm">
+                Alasan Permintaan <span className="text-red-500">*</span>
+              </label>
+              <textarea
+                id="reason"
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                placeholder="Jelaskan mengapa Anda ingin menjadi penjual UMKM di marketplace ini..."
+                rows={5}
+                required
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              />
+              <p className="text-sm text-gray-500">
+                Jelaskan secara singkat tentang bisnis UMKM yang ingin Anda
+                jalankan
+              </p>
+            </div>
+
+            <div className="flex gap-2 pt-4">
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                disabled={loading}
+              >
+                Batal
+              </button>
+              <button
+                type="submit"
+                className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={loading}
+              >
+                {loading ? "Mengajukan..." : "Ajukan Permintaan"}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </>
+  );
+}

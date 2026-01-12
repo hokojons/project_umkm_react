@@ -1,0 +1,61 @@
+﻿{
+    "success":  true,
+    "data":  [
+                 {
+                     "id":  1,
+                     "user_id":  3,
+                     "nama_toko":  "jc",
+                     "nama_pemilik":  "kfmdkf",
+                     "deskripsi":  "fdf",
+                     "foto_toko":  null,
+                     "kategori_id":  1,
+                     "whatsapp":  null,
+                     "telepon":  null,
+                     "email":  null,
+                     "instagram":  null,
+                     "alamat":  null,
+                     "kota":  null,
+                     "kode_pos":  null,
+                     "status":  "pending",
+                     "created_at":  "2025-12-21T12:55:09.000000Z",
+                     "updated_at":  "2025-12-21T13:22:13.000000Z",
+                     "user":  {
+                                  "id":  3,
+                                  "name":  "fire",
+                                  "email":  "fire@gmail.com",
+                                  "telepon":  "628517645353",
+                                  "email_verified_at":  null,
+                                  "status":  "active",
+                                  "alamat":  null,
+                                  "kota":  null,
+                                  "kode_pos":  null,
+                                  "role":  "umkm",
+                                  "remember_token":  null,
+                                  "created_at":  "2025-12-21T12:41:24.000000Z",
+                                  "updated_at":  "2025-12-21T13:08:12.000000Z"
+                              },
+                     "category":  {
+                                      "id":  1,
+                                      "nama_kategori":  "Makanan \u0026 Minuman",
+                                      "icon":  "🍔",
+                                      "created_at":  "2025-12-21T12:33:08.000000Z",
+                                      "updated_at":  "2025-12-21T12:33:08.000000Z"
+                                  },
+                     "products":  [
+                                      {
+                                          "id":  3,
+                                          "umkm_id":  1,
+                                          "nama_produk":  "fdf20000",
+                                          "deskripsi":  "dff",
+                                          "harga":  "20000.00",
+                                          "kategori":  "accessory",
+                                          "stok":  100,
+                                          "gambar":  "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNj",
+                                          "status":  "active",
+                                          "created_at":  "2025-12-21T13:22:13.000000Z",
+                                          "updated_at":  "2025-12-21T13:22:13.000000Z"
+                                      }
+                                  ]
+                 }
+             ]
+}

@@ -1,0 +1,354 @@
+═══════════════════════════════════════════════════════════════════════════════
+   PANDUAN MENAMBAHKAN FITUR LOGIN ADMIN DENGAN EMAIL
+═══════════════════════════════════════════════════════════════════════════════
+
+MASALAH SAAT INI:
+-----------------
+❌ Tabel 'admins' tidak punya kolom 'email'
+❌ Tidak ada endpoint API untuk login admin
+❌ Model Admin tidak lengkap
+
+STRUKTUR TABEL ADMINS SAAT INI:
+-------------------------------
+- id (string, 10 karakter) - PRIMARY KEY
+- nama (string, 15 karakter)
+- password (string, hashed)
+- status (string, 15 karakter, default: 'active')
+- created_at (timestamp)
+- updated_at (timestamp)
+
+YANG HARUS DILAKUKAN:
+=====================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ LANGKAH 1: TAMBAH KOLOM EMAIL DI DATABASE                                   │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+FILE: Laravel/database/migrations/2025_12_18_000001_create_umkm_tables.php
+LOKASI: Baris 97-105
+
+SEBELUM (YANG LAMA):
+--------------------
+Schema::create('admins', function (Blueprint $table) {
+    $table->string('id', 10)->primary();
+    $table->string('nama', 15);
+    $table->string('password');
+    $table->string('status', 15)->default('active');
+    $table->timestamps();
+});
+
+SESUDAH (YANG BARU):
+--------------------
+Schema::create('admins', function (Blueprint $table) {
+    $table->string('id', 10)->primary();
+    $table->string('nama', 15);
+    $table->string('email', 100)->unique();  // ✅ TAMBAHKAN INI
+    $table->string('password');
+    $table->string('status', 15)->default('active');
+    $table->timestamps();
+});
+
+CARA APPLY PERUBAHAN:
+---------------------
+1. Edit file migration di atas
+2. Jalankan command ini di terminal:
+
+   cd "c:\Coding\Pak andre web\,\Laravel"
+   php artisan migrate:fresh
+
+   ⚠️ HATI-HATI: Ini akan menghapus semua data di database!
+   
+   ALTERNATIF (jika ingin keep data):
+   php artisan make:migration add_email_to_admins_table
+   
+   Lalu edit file migration baru:
+   
+   public function up()
+   {
+       Schema::table('admins', function (Blueprint $table) {
+           $table->string('email', 100)->unique()->after('nama');
+       });
+   }
+   
+   php artisan migrate
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ LANGKAH 2: UPDATE MODEL ADMIN                                               │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+FILE: Laravel/app/Models/Admin.php
+LOKASI: Seluruh file
+
+SEBELUM (YANG LAMA):
+--------------------
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Admin extends Model
+{
+    protected $keyType = 'string';
+    public $incrementing = false;
+    protected $primaryKey = 'id';
+
+    protected $fillable = [
+        'id',
+        'name',
+        'password',
+        'status'
+    ];
+
+    protected $hidden = ['password'];
+}
+
+SESUDAH (YANG BARU):
+--------------------
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User as Authenticatable;  // ✅ TAMBAH
+
+class Admin extends Authenticatable  // ✅ UBAH dari Model
+{
+    protected $keyType = 'string';
+    public $incrementing = false;
+    protected $primaryKey = 'id';
+
+    protected $fillable = [
+        'id',
+        'nama',        // ✅ UBAH dari 'name' ke 'nama' (sesuai database)
+        'email',       // ✅ TAMBAH
+        'password',
+        'status'
+    ];
+
+    protected $hidden = [
+        'password',
+        'remember_token'  // ✅ TAMBAH
+    ];
+
+    protected $casts = [
+        'email_verified_at' => 'datetime',  // ✅ TAMBAH (opsional)
+    ];
+}
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ LANGKAH 3: BUAT ENDPOINT LOGIN ADMIN                                        │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+FILE: Laravel/app/Http/Controllers/Api/AuthController.php
+LOKASI: Tambahkan function baru setelah function login() yang sudah ada
+
+TAMBAHKAN KODE INI (di bawah function login yang sudah ada):
+------------------------------------------------------------
+
+    /**
+     * Login untuk Admin
+     */
+    public function loginAdmin(Request $request)
+    {
+        $validated = $request->validate([
+            'email' => 'required|email',
+            'password' => 'required|string',
+        ]);
+
+        // Cari admin berdasarkan email
+        $admin = \App\Models\Admin::where('email', $validated['email'])->first();
+
+        // Validasi password
+        if (!$admin || !Hash::check($validated['password'], $admin->password)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Email atau password salah'
+            ], 401);
+        }
+
+        // Cek status admin
+        if ($admin->status !== 'active') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Akun admin tidak aktif'
+            ], 403);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Login admin berhasil',
+            'data' => [
+                'id' => $admin->id,
+                'nama' => $admin->nama,
+                'email' => $admin->email,
+                'role' => 'admin',  // Penting untuk frontend
+            ]
+        ], 200);
+    }
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ LANGKAH 4: TAMBAH ROUTE API                                                 │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+FILE: Laravel/routes/api.php
+LOKASI: Di dalam Route::prefix('auth')->group
+
+CARI BARIS INI:
+---------------
+Route::prefix('auth')->group(function () {
+    Route::post('/register', [AuthController::class, 'register']);
+    Route::post('/login', [AuthController::class, 'login']);
+    ...
+});
+
+TAMBAHKAN:
+----------
+Route::prefix('auth')->group(function () {
+    Route::post('/register', [AuthController::class, 'register']);
+    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/admin/login', [AuthController::class, 'loginAdmin']);  // ✅ TAMBAH
+    ...
+});
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ LANGKAH 5: TAMBAH DATA ADMIN DI DATABASE                                    │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+Setelah migration, tambahkan data admin dengan email:
+
+CARA 1: Via Terminal (Tinker)
+------------------------------
+cd "c:\Coding\Pak andre web\,\Laravel"
+php artisan tinker --execute="DB::table('admins')->where('id', 'ADM001')->update(['email' => 'admin@pasar.com']);"
+
+CARA 2: Via SQL (phpMyAdmin)
+-----------------------------
+1. Buka http://localhost/phpmyadmin
+2. Pilih database 'dbumkm'
+3. Klik tabel 'admins'
+4. Edit record ADM001
+5. Isi kolom email dengan: admin@pasar.com
+6. Save
+
+CARA 3: Buat Admin Baru (Recommended)
+--------------------------------------
+cd "c:\Coding\Pak andre web\,\Laravel"
+php artisan tinker
+
+Lalu ketik di tinker:
+\App\Models\Admin::create([
+    'id' => 'ADM001',
+    'nama' => 'Admin Pasar',
+    'email' => 'admin@pasar.com',
+    'password' => bcrypt('admin123'),
+    'status' => 'active'
+]);
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ LANGKAH 6: TEST LOGIN ADMIN                                                 │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+CARA 1: Via Postman/Thunder Client
+-----------------------------------
+POST http://localhost:8000/api/auth/admin/login
+Content-Type: application/json
+
+Body:
+{
+    "email": "admin@pasar.com",
+    "password": "admin123"
+}
+
+Response yang Benar:
+{
+    "success": true,
+    "message": "Login admin berhasil",
+    "data": {
+        "id": "ADM001",
+        "nama": "Admin Pasar",
+        "email": "admin@pasar.com",
+        "role": "admin"
+    }
+}
+
+CARA 2: Via Terminal (cURL)
+----------------------------
+curl -X POST http://localhost:8000/api/auth/admin/login \
+  -H "Content-Type: application/json" \
+  -d "{\"email\":\"admin@pasar.com\",\"password\":\"admin123\"}"
+
+
+═══════════════════════════════════════════════════════════════════════════════
+RINGKASAN PERUBAHAN:
+═══════════════════════════════════════════════════════════════════════════════
+
+📁 FILES YANG DIUBAH:
+---------------------
+1. ✅ Laravel/database/migrations/2025_12_18_000001_create_umkm_tables.php
+   → Tambah kolom email di tabel admins
+
+2. ✅ Laravel/app/Models/Admin.php
+   → Update model (extend Authenticatable, tambah email di fillable)
+
+3. ✅ Laravel/app/Http/Controllers/Api/AuthController.php
+   → Tambah function loginAdmin()
+
+4. ✅ Laravel/routes/api.php
+   → Tambah route POST /api/auth/admin/login
+
+📊 DATABASE:
+------------
+- Tabel: admins
+- Kolom baru: email (string, 100, unique)
+- Data: ADM001 dengan email 'admin@pasar.com'
+
+🔐 KREDENSIAL LOGIN:
+--------------------
+Email: admin@pasar.com
+Password: admin123
+
+🌐 ENDPOINT API:
+----------------
+POST http://localhost:8000/api/auth/admin/login
+
+═══════════════════════════════════════════════════════════════════════════════
+TROUBLESHOOTING:
+═══════════════════════════════════════════════════════════════════════════════
+
+❌ ERROR: "Column 'email' not found"
+SOLUSI: Jalankan migration ulang atau tambah kolom via SQL
+
+❌ ERROR: "Unauthenticated" 
+SOLUSI: Pastikan endpoint benar dan tidak pakai middleware auth
+
+❌ ERROR: "Email atau password salah"
+SOLUSI: 
+- Cek password di database sudah di-hash dengan bcrypt
+- Pastikan email benar-benar ada di tabel admins
+- Test dengan: DB::table('admins')->where('email', 'admin@pasar.com')->first()
+
+❌ Laravel server tidak jalan
+SOLUSI:
+cd "c:\Coding\Pak andre web\,\Laravel"
+php artisan serve
+
+═══════════════════════════════════════════════════════════════════════════════
+TIPS BELAJAR:
+═══════════════════════════════════════════════════════════════════════════════
+
+💡 Setiap kali ubah migration, jalankan: php artisan migrate:fresh
+💡 Gunakan tinker untuk test database: php artisan tinker
+💡 Cek route API: php artisan route:list --path=auth
+💡 Debug dengan dd() atau Log::info() di controller
+💡 Lihat log error di: Laravel/storage/logs/laravel.log
+
+═══════════════════════════════════════════════════════════════════════════════
+Created: 2025-12-20
+Untuk: Belajar menambahkan fitur login admin dengan email
+═══════════════════════════════════════════════════════════════════════════════
