@@ -27,6 +27,9 @@ WORKDIR /var/www/html
 # Copy all files first
 COPY . .
 
+# Debug: List files to see what was copied
+RUN ls -la && ls -la composer.json || echo "composer.json NOT FOUND"
+
 # Install dependencies
 RUN composer install --no-dev --optimize-autoloader
 
