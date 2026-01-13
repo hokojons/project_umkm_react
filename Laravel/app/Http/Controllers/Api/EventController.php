@@ -244,29 +244,30 @@ class EventController extends Controller
             ], 404);
         }
 
-        // Delete event participants first
-        DB::table('tpengguna')
-            ->where('kodeacara', $id)
-            ->delete();
+        try {
+            // Delete event image if exists and is local
+            if ($event->gambar && 
+                !filter_var($event->gambar, FILTER_VALIDATE_URL) && 
+                file_exists(public_path($event->gambar))) {
+                unlink(public_path($event->gambar));
+            }
 
-        // Delete visitor details
-        DB::table('event_visitor_details')
-            ->whereIn('kodepengguna', function($query) use ($id) {
-                $query->select('kodepengguna')
-                    ->from('tpengguna')
-                    ->where('kodeacara', $id);
-            })
-            ->delete();
+            // Delete event
+            DB::table('tacara')
+                ->where('kodeacara', $id)
+                ->delete();
 
-        // Delete event
-        DB::table('tacara')
-            ->where('kodeacara', $id)
-            ->delete();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Event deleted successfully'
-        ], 200);
+            return response()->json([
+                'success' => true,
+                'message' => 'Event deleted successfully'
+            ], 200);
+        } catch (\Exception $e) {
+            \Log::error('Event deletion error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete event: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     public function register(Request $request)
