@@ -28,6 +28,8 @@ return [
         // Production
         'https://operasional.gstransport.id',
         'http://operasional.gstransport.id',
+        'https://project-umkm-react.vercel.app',
+        'https://projecct-umkm-laravel-production.up.railway.app',
     ],
 
     'allowed_origins_patterns' => [],
