@@ -40,5 +40,8 @@ RUN mkdir -p storage/logs storage/framework/cache storage/framework/sessions sto
 # Expose port (Railway will use $PORT)
 EXPOSE 8080
 
-# Start command - use PHP built-in server directly
-CMD ["sh", "-c", "php -S 0.0.0.0:${PORT:-8080} -t public"]
+# Copy and make start script executable
+RUN chmod +x start.sh
+
+# Start command
+CMD ["sh", "start.sh"]
