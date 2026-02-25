@@ -37,8 +37,8 @@ RUN composer install --no-dev --optimize-autoloader
 RUN mkdir -p storage/logs storage/framework/cache storage/framework/sessions storage/framework/views bootstrap/cache \
     && chmod -R 775 storage bootstrap/cache
 
-# Expose port
-EXPOSE 10000
+# Expose port (Railway will use $PORT)
+EXPOSE 8080
 
-# Start command
-CMD php artisan migrate --force && php artisan serve --host=0.0.0.0 --port=10000
+# Start command - use PHP built-in server directly
+CMD ["sh", "-c", "php -S 0.0.0.0:${PORT:-8080} -t public"]
