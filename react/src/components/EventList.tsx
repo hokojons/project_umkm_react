@@ -2,6 +2,7 @@ import { useState, useEffect, forwardRef } from "react";
 import { EventCard } from "./EventCard";
 import { EventDetailModal } from "./EventDetailModal";
 import { Calendar } from "lucide-react";
+import { API_BASE_URL } from "../config/api";
 
 interface Event {
   id: string;
@@ -41,9 +42,9 @@ export const EventList = forwardRef<HTMLElement, EventListProps>(
 
     const fetchEvents = async () => {
       try {
-        const response = await fetch('http://localhost:8000/api/events');
+        const response = await fetch(`${API_BASE_URL}/events`);
         const data = await response.json();
-        
+
         if (data.success && Array.isArray(data.data)) {
           // Map backend data dengan status
           const eventsWithStatus = data.data.map((event: any) => ({
@@ -63,11 +64,14 @@ export const EventList = forwardRef<HTMLElement, EventListProps>(
     const getEventStatus = (dateString: string): "upcoming" | "ongoing" | "completed" => {
       const eventDate = new Date(dateString);
       const today = new Date();
+      // Reset time to compare dates only
+      eventDate.setHours(0, 0, 0, 0);
+      today.setHours(0, 0, 0, 0);
       const diffDays = Math.floor((eventDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-      
-      if (diffDays < 0) return "completed";
-      if (diffDays <= 7) return "ongoing";
-      return "upcoming";
+
+      if (diffDays < 0) return "completed";  // Event sudah lewat
+      if (diffDays === 0) return "ongoing";   // Event hari ini = sedang berlangsung
+      return "upcoming";                       // Event belum tiba
     };
 
     const filteredEvents = events.filter((event) => {
@@ -94,39 +98,36 @@ export const EventList = forwardRef<HTMLElement, EventListProps>(
     return (
       <section
         ref={ref}
-        className="py-16 bg-gradient-to-br from-purple-50 via-pink-50 to-orange-50 dark:bg-gradient-to-br dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 transition-colors"
+        className="py-16 bg-white dark:bg-gray-900 transition-colors"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Filter Tabs */}
           <div className="flex justify-center gap-3 mb-8">
             <button
               onClick={() => setFilter("all")}
-              className={`px-6 py-2 rounded-full transition-all shadow-sm font-medium ${
-                filter === "all"
-                  ? "bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-lg"
-                  : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-100 hover:bg-purple-50 dark:hover:bg-gray-600 border border-purple-200 dark:border-gray-600"
-              }`}
+              className={`px-6 py-2 rounded-full transition-all shadow-sm font-medium ${filter === "all"
+                ? "bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-lg"
+                : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-100 hover:bg-purple-50 dark:hover:bg-gray-600 border border-purple-200 dark:border-gray-600"
+                }`}
             >
               Semua ({events.length})
             </button>
             <button
               onClick={() => setFilter("upcoming")}
-              className={`px-6 py-2 rounded-full transition-all shadow-sm font-medium ${
-                filter === "upcoming"
-                  ? "bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-lg"
-                  : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-100 hover:bg-purple-50 dark:hover:bg-gray-600 border border-purple-200 dark:border-gray-600"
-              }`}
+              className={`px-6 py-2 rounded-full transition-all shadow-sm font-medium ${filter === "upcoming"
+                ? "bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-lg"
+                : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-100 hover:bg-purple-50 dark:hover:bg-gray-600 border border-purple-200 dark:border-gray-600"
+                }`}
             >
               Akan Datang (
               {events.filter((e) => e.status === "upcoming").length})
             </button>
             <button
               onClick={() => setFilter("ongoing")}
-              className={`px-6 py-2 rounded-full transition-all shadow-sm font-medium ${
-                filter === "ongoing"
-                  ? "bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-lg"
-                  : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-100 hover:bg-purple-50 dark:hover:bg-gray-600 border border-purple-200 dark:border-gray-600"
-              }`}
+              className={`px-6 py-2 rounded-full transition-all shadow-sm font-medium ${filter === "ongoing"
+                ? "bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-lg"
+                : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-100 hover:bg-purple-50 dark:hover:bg-gray-600 border border-purple-200 dark:border-gray-600"
+                }`}
             >
               Berlangsung ({events.filter((e) => e.status === "ongoing").length}
               )
@@ -139,8 +140,7 @@ export const EventList = forwardRef<HTMLElement, EventListProps>(
               <p className="text-gray-500">
                 Tidak ada event{" "}
                 {filter !== "all" &&
-                  `yang ${
-                    filter === "upcoming" ? "akan datang" : "sedang berlangsung"
+                  `yang ${filter === "upcoming" ? "akan datang" : "sedang berlangsung"
                   }`}
               </p>
             </div>

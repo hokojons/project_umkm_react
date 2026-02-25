@@ -2,6 +2,7 @@
   "name": "umkm-react-app",
   "version": "0.1.0",
   "private": true,
+  "homepage": "operasional.gstransport.id",
   "dependencies": {
     "@radix-ui/react-accordion": "^1.2.3",
     "@radix-ui/react-alert-dialog": "^1.1.6",
@@ -48,15 +49,15 @@
     "recharts": "^2.15.2",
     "sonner": "^2.0.3",
     "tailwind-merge": "*",
-    "vaul": "^1.1.2"
+    "vaul": "^1.1.2",
+    "vite": "6.3.5",
+    "@vitejs/plugin-react-swc": "^3.10.2"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",
-    "@vitejs/plugin-react-swc": "^3.10.2",
     "autoprefixer": "^10.4.23",
     "postcss": "^8.5.6",
-    "tailwindcss": "^3.4.19",
-    "vite": "6.3.5"
+    "tailwindcss": "^3.4.19"
   },
   "scripts": {
     "dev": "vite",

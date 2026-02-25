@@ -1,4 +1,5 @@
 import React from 'react';
+import { BASE_HOST } from '../config/api';
 
 /**
  * Image Helper Utilities
@@ -8,7 +9,7 @@ import React from 'react';
 // Generate proper image URL
 export function getImageUrl(
     image: string | undefined | null,
-    baseUrl: string = "http://localhost:8000",
+    baseUrl: string = BASE_HOST,
     fallbackPlaceholder?: string
 ): string {
     // Return placeholder if no image
@@ -144,7 +145,7 @@ export function isImageFile(file: File): boolean {
 // Validate image file
 export function validateImageFile(
     file: File,
-    maxSizeBytes: number = 5 * 1024 * 1024 // 5MB default
+    maxSizeBytes: number = 2 * 1024 * 1024 // 2MB default
 ): { valid: boolean; error?: string } {
     if (!isImageFile(file)) {
         return { valid: false, error: "File harus berupa gambar" };

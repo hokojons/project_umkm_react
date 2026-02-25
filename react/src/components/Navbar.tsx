@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   Store,
   ShoppingCart,
@@ -17,10 +17,14 @@ import {
   Menu,
   X,
   ClipboardCheck,
-  RefreshCw,
+  ShoppingBag,
+  Gift,
 } from "lucide-react";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
+import { useSiteSettings } from "../context/SiteSettingsContext";
+import { NotificationBell } from "./NotificationBell";
+import { API_BASE_URL, BASE_HOST } from "../config/api";
 
 interface NavbarProps {
   onCartClick: () => void;
@@ -29,7 +33,7 @@ interface NavbarProps {
   onSubmitClick: () => void;
   onRoleUpgradeClick: () => void;
   onUMKMDashboardClick: () => void;
-  onOrderHistoryClick: () => void;
+  onUMKMOrdersClick?: () => void; // NEW: UMKM order management
   onProfileClick: () => void;
   onStatusCheckClick?: () => void; // New prop for status check
   isDarkMode: boolean;
@@ -43,7 +47,7 @@ export function Navbar({
   onSubmitClick,
   onRoleUpgradeClick,
   onUMKMDashboardClick,
-  onOrderHistoryClick,
+  onUMKMOrdersClick,
   onProfileClick,
   onStatusCheckClick,
   isDarkMode,
@@ -51,32 +55,66 @@ export function Navbar({
 }: NavbarProps) {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
+  const [hasApprovedUmkm, setHasApprovedUmkm] = useState(false);
   const { getTotalItems } = useCart();
-  const { user, signOut, refreshUser } = useAuth();
+  const { user, signOut } = useAuth();
+  const { settings } = useSiteSettings();
   const location = useLocation();
+  const navigate = useNavigate();
+
+  // Check if user has approved UMKM
+  useEffect(() => {
+    const checkApprovedUmkm = async () => {
+      if (user && user.role === "umkm") {
+        try {
+          // Use the correct endpoint with X-User-ID header
+          const response = await fetch(`${API_BASE_URL}/umkm/my-umkm`, {
+            headers: {
+              "X-User-ID": user.id,
+            },
+          });
+          const data = await response.json();
+          console.log("=== UMKM Status Check ===", { userId: user.id, data });
+
+          if (data.success && data.data && data.data.length > 0) {
+            // Check if any UMKM has approved/active status
+            const approved = data.data.some((u: any) =>
+              u.status === "approved" ||
+              u.status === "active" ||
+              u.status === "Approved" ||
+              u.status === "Active"
+            );
+            console.log("Has approved UMKM:", approved);
+            setHasApprovedUmkm(approved);
+          } else {
+            setHasApprovedUmkm(false);
+          }
+        } catch (error) {
+          console.error("Error checking UMKM status:", error);
+          setHasApprovedUmkm(false);
+        }
+      } else {
+        setHasApprovedUmkm(false);
+      }
+    };
+
+    checkApprovedUmkm();
+  }, [user]);
 
   const handleSignOut = () => {
     signOut();
     setShowUserMenu(false);
   };
 
-  const handleRefreshProfile = async () => {
-    if (refreshUser && !refreshing) {
-      setRefreshing(true);
-      try {
-        await refreshUser();
-      } finally {
-        setRefreshing(false);
-      }
-    }
-  };
+
 
   const isActive = (path: string) => location.pathname === path;
 
   const navLinks = [
     { path: "/", label: "Home", icon: Home },
     { path: "/products", label: "Produk", icon: Store },
+    { path: "/paket", label: "Paket", icon: Gift },
+    { path: "/umkm", label: "UMKM", icon: Store },
     { path: "/events", label: "Event", icon: Calendar },
   ];
 
@@ -89,12 +127,20 @@ export function Navbar({
             to="/"
             className="flex items-center gap-3 hover:opacity-80 transition-opacity"
           >
-            <div className="bg-gradient-to-r from-orange-500 to-amber-500 p-2 rounded-xl shadow-lg">
-              <Store className="w-6 h-6 text-white" />
-            </div>
+            {settings.siteLogo ? (
+              <img
+                src={settings.siteLogo.startsWith('http') ? settings.siteLogo : `${BASE_HOST}/${settings.siteLogo}`}
+                alt={settings.siteName}
+                className="w-10 h-10 rounded-xl object-contain"
+              />
+            ) : (
+              <div className="bg-gradient-to-r from-orange-500 to-amber-500 p-2 rounded-xl shadow-lg">
+                <Store className="w-6 h-6 text-white" />
+              </div>
+            )}
             <div>
               <h1 className="text-xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
-                Pasar UMKM
+                {settings.siteName}
               </h1>
               <p className="text-xs text-gray-600 dark:text-gray-400">
                 Dukung Produk Lokal
@@ -108,11 +154,10 @@ export function Navbar({
               <Link
                 key={link.path}
                 to={link.path}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
-                  isActive(link.path)
-                    ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-lg"
-                    : "text-gray-700 dark:text-gray-300 hover:bg-orange-50 dark:hover:bg-gray-800"
-                }`}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${isActive(link.path)
+                  ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-lg"
+                  : "text-gray-700 dark:text-gray-300 hover:bg-orange-50 dark:hover:bg-gray-800"
+                  }`}
               >
                 <link.icon className="w-4 h-4" />
                 {link.label}
@@ -134,6 +179,9 @@ export function Navbar({
                 <Moon className="w-5 h-5 text-gray-700" />
               )}
             </button>
+
+            {/* Notification Bell */}
+            {user && <NotificationBell />}
 
             {/* Cart Button */}
             <button
@@ -194,18 +242,10 @@ export function Navbar({
                         Profil Saya
                       </button>
 
-                      <button
-                        onClick={handleRefreshProfile}
-                        disabled={refreshing}
-                        className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-3 text-gray-700 dark:text-gray-300 disabled:opacity-50"
-                      >
-                        <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-                        {refreshing ? 'Memperbarui...' : 'Perbarui Profil'}
-                      </button>
 
                       <button
                         onClick={() => {
-                          onOrderHistoryClick();
+                          navigate('/orders');
                           setShowUserMenu(false);
                         }}
                         className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-3 text-gray-700 dark:text-gray-300"
@@ -227,17 +267,32 @@ export function Navbar({
                         </button>
                       )}
 
-                      {user.role === "umkm_owner" && (
-                        <button
-                          onClick={() => {
-                            onUMKMDashboardClick();
-                            setShowUserMenu(false);
-                          }}
-                          className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-3 text-gray-700 dark:text-gray-300"
-                        >
-                          <Store className="w-4 h-4" />
-                          Dashboard UMKM
-                        </button>
+                      {user.role === "umkm" && hasApprovedUmkm && (
+                        <>
+                          <button
+                            onClick={() => {
+                              onUMKMDashboardClick();
+                              setShowUserMenu(false);
+                            }}
+                            className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-3 text-gray-700 dark:text-gray-300"
+                          >
+                            <Store className="w-4 h-4" />
+                            Dashboard UMKM
+                          </button>
+
+                          {onUMKMOrdersClick && (
+                            <button
+                              onClick={() => {
+                                onUMKMOrdersClick();
+                                setShowUserMenu(false);
+                              }}
+                              className="w-full px-4 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-3 text-indigo-600 dark:text-indigo-400 font-medium"
+                            >
+                              <ShoppingBag className="w-4 h-4" />
+                              📦 Kelola Pesanan
+                            </button>
+                          )}
+                        </>
                       )}
 
                       {/* Upgrade ke UMKM - hanya untuk customer */}
@@ -254,8 +309,8 @@ export function Navbar({
                         </button>
                       )}
 
-                      {/* Tombol Daftarkan Bisnis - hanya untuk umkm_owner */}
-                      {user.role === "umkm_owner" && (
+                      {/* Tombol Daftarkan Bisnis - hanya untuk umkm yang belum punya UMKM approved */}
+                      {user.role === "umkm" && !hasApprovedUmkm && (
                         <>
                           <button
                             onClick={() => {
@@ -267,7 +322,7 @@ export function Navbar({
                             <PlusCircle className="w-4 h-4" />
                             Daftarkan Bisnis
                           </button>
-                          
+
                           {/* Check Status Button */}
                           {onStatusCheckClick && (
                             <button
@@ -328,11 +383,10 @@ export function Navbar({
                   key={link.path}
                   to={link.path}
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className={`flex items-center gap-2 px-4 py-3 rounded-lg font-medium transition-all ${
-                    isActive(link.path)
-                      ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white"
-                      : "text-gray-700 dark:text-gray-300 hover:bg-orange-50 dark:hover:bg-gray-800"
-                  }`}
+                  className={`flex items-center gap-2 px-4 py-3 rounded-lg font-medium transition-all ${isActive(link.path)
+                    ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white"
+                    : "text-gray-700 dark:text-gray-300 hover:bg-orange-50 dark:hover:bg-gray-800"
+                    }`}
                 >
                   <link.icon className="w-5 h-5" />
                   {link.label}

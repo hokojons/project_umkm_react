@@ -12,7 +12,7 @@ interface User {
   id: string;
   email: string;
   name: string;
-  role: "admin" | "customer" | "umkm_owner";
+  role: "admin" | "customer" | "umkm";
   nama_lengkap?: string;
   no_telepon?: string;
   status?: string;
@@ -28,7 +28,7 @@ interface AuthContextType {
     email: string,
     password: string,
     name: string,
-    role?: "admin" | "customer" | "umkm_owner"
+    role?: "admin" | "customer" | "umkm"
   ) => Promise<void>;
   signOut: () => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -41,14 +41,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load user from localStorage on mount
+  // Load user from localStorage on mount, then refresh from backend
   useEffect(() => {
     const savedUser = localStorage.getItem("pasar_umkm_current_user");
     const savedToken = localStorage.getItem("pasar_umkm_access_token");
 
     if (savedUser && savedToken) {
-      setUser(JSON.parse(savedUser));
+      const parsed = JSON.parse(savedUser);
+      setUser(parsed);
       setAccessToken(savedToken);
+
+      // Auto-refresh from backend to get latest role/status (skip admin - stored in different table)
+      if (parsed.role !== 'admin') {
+        fetch(`${API_CONFIG.BASE_URL}/auth/profile`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "X-User-ID": String(parsed.id),
+          },
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.success && data.data) {
+              const freshUser: User = {
+                id: data.data.id,
+                email: data.data.email,
+                name: data.data.nama_lengkap || data.data.name || parsed.name,
+                role: data.data.role || parsed.role,
+                nama_lengkap: data.data.nama_lengkap,
+                no_telepon: data.data.no_telepon,
+                status: data.data.status,
+                wa_verified: data.data.wa_verified,
+              };
+              setUser(freshUser);
+              localStorage.setItem("pasar_umkm_current_user", JSON.stringify(freshUser));
+            }
+          })
+          .catch((err) => console.warn("Auto-refresh profile failed:", err));
+      }
     }
 
     setIsLoading(false);
@@ -96,6 +126,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       localStorage.setItem("pasar_umkm_current_user", JSON.stringify(newUser));
       localStorage.setItem("pasar_umkm_access_token", token);
+
+      // Auto-refresh profile from backend to get latest data (skip admin - stored in different table)
+      if (newUser.role !== 'admin') {
+        try {
+          const profileRes = await fetch(`${API_CONFIG.BASE_URL}/auth/profile`, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              "X-User-ID": String(newUser.id),
+            },
+          });
+          if (profileRes.ok) {
+            const profileData = await profileRes.json();
+            if (profileData.success && profileData.data) {
+              const freshUser: User = {
+                id: profileData.data.id,
+                email: profileData.data.email,
+                name: profileData.data.nama_lengkap || profileData.data.name || newUser.name,
+                role: profileData.data.role || newUser.role,
+                nama_lengkap: profileData.data.nama_lengkap,
+                no_telepon: profileData.data.no_telepon,
+                status: profileData.data.status,
+                wa_verified: profileData.data.wa_verified,
+              };
+              setUser(freshUser);
+              localStorage.setItem("pasar_umkm_current_user", JSON.stringify(freshUser));
+            }
+          }
+        } catch (profileError) {
+          console.warn("Could not auto-refresh profile after login:", profileError);
+        }
+      }
+
+      // Dispatch custom event to notify CartContext to load user's cart
+      window.dispatchEvent(new CustomEvent("user-changed", { detail: { userId: newUser.id } }));
     } catch (error: any) {
       console.error("Login error:", error);
       const errorMessage =
@@ -110,7 +175,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     email: string,
     password: string,
     name: string,
-    role?: "admin" | "user" | "umkm"
+    role?: "admin" | "customer" | "umkm"
   ) => {
     try {
       // Call Laravel API for registration
@@ -143,7 +208,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           id: data.data.id,
           email: email,
           name: name,
-          role: role || "user",
+          role: role || "customer",
         };
 
         const token = `token_${Date.now()}_${Math.random()
@@ -171,6 +236,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setAccessToken(null);
     localStorage.removeItem("pasar_umkm_current_user");
     localStorage.removeItem("pasar_umkm_access_token");
+    // Dispatch custom event to notify CartContext to clear
+    window.dispatchEvent(new CustomEvent("user-changed", { detail: { userId: null } }));
   };
 
   const refreshUser = async () => {
@@ -202,8 +269,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const updatedUser: User = {
           id: data.data.id,
           email: data.data.email,
-          name: data.data.name,
-          role: data.data.role || "user",
+          name: data.data.nama_lengkap || data.data.name || userData.name,
+          role: data.data.role || "customer",
+          nama_lengkap: data.data.nama_lengkap,
+          no_telepon: data.data.no_telepon,
+          status: data.data.status,
+          wa_verified: data.data.wa_verified,
         };
 
         setUser(updatedUser);

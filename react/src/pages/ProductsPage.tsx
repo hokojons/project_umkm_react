@@ -1,20 +1,24 @@
 import { useState, useEffect } from "react";
 import { Search } from "lucide-react";
 import { ProductCard } from "../components/ProductCard";
-import { UMKMDetailModal } from "../components/UMKMDetailModal";
+import { WhatsAppCheckoutModal } from "../components/WhatsAppCheckoutModal";
 import { FoodStand, Product } from "../types";
 import { foodStands } from "../data/stands";
+import { useAuth } from "../context/AuthContext";
+import { toast } from "sonner";
+import { API_BASE_URL, BASE_HOST } from "../config/api";
 
 interface ProductWithStand extends Product {
   stand: FoodStand;
 }
 
 export function ProductsPage() {
-  const [selectedStand, setSelectedStand] = useState<FoodStand | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [products, setProducts] = useState<ProductWithStand[]>([]);
   const [stands, setStands] = useState<FoodStand[]>(foodStands);
+  const [buyNowProduct, setBuyNowProduct] = useState<ProductWithStand | null>(null);
+  const { user } = useAuth();
 
   // Dynamic categories based on available products
   const categories = [
@@ -32,7 +36,7 @@ export function ProductsPage() {
 
   const loadBusinesses = async () => {
     try {
-      const response = await fetch("http://localhost:8000/api/umkm");
+      const response = await fetch(`${API_BASE_URL}/umkm`);
       const data = await response.json();
 
       if (data.success && Array.isArray(data.data)) {
@@ -45,7 +49,7 @@ export function ProductsPage() {
                 if (product.gambar.startsWith('http://') || product.gambar.startsWith('https://')) {
                   productImage = product.gambar;
                 } else {
-                  productImage = `http://localhost:8000/${product.gambar}`;
+                  productImage = `${BASE_HOST}/${product.gambar}`;
                 }
               }
 
@@ -56,6 +60,7 @@ export function ProductsPage() {
                 price: parseFloat(product.harga),
                 image: productImage,
                 category: product.kategori || umkm.kategori || "Lainnya",
+                stock: product.stok ?? 0,
                 available: product.stok > 0,
               };
             }) || [];
@@ -69,13 +74,17 @@ export function ProductsPage() {
             image: umkm.foto_toko // Fixed: was foto_profil
               ? (umkm.foto_toko.startsWith('http://') || umkm.foto_toko.startsWith('https://')
                 ? umkm.foto_toko
-                : `http://localhost:8000/${umkm.foto_toko}`)
+                : `${BASE_HOST}/${umkm.foto_toko}`)
               : "/api/placeholder/400/300",
             menu: products,
             isActive: umkm.status === "active",
             owner: umkm.nama_pemilik,
             whatsapp: umkm.whatsapp,
             instagram: umkm.instagram,
+            menyediakanJasaKirim: umkm.menyediakan_jasa_kirim === 1 || umkm.menyediakan_jasa_kirim === true,
+            namaBank: umkm.nama_bank,
+            noRekening: umkm.no_rekening,
+            atasNama: umkm.atas_nama_rekening || umkm.atas_nama,
           };
         });
 
@@ -146,8 +155,8 @@ export function ProductsPage() {
                 key={category}
                 onClick={() => setSelectedCategory(category)}
                 className={`px-6 py-2 rounded-full font-medium transition-all ${selectedCategory === category
-                    ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-lg"
-                    : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-orange-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700"
+                  ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-lg"
+                  : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-orange-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700"
                   }`}
               >
                 {category}
@@ -167,7 +176,15 @@ export function ProductsPage() {
             <ProductCard
               key={product.id}
               product={product}
-              onViewStore={() => setSelectedStand(product.stand)}
+              businessName={product.stand.name}
+              businessId={product.stand.id}
+              onBuyNow={() => {
+                if (!user) {
+                  toast.error("Silakan login terlebih dahulu");
+                  return;
+                }
+                setBuyNowProduct(product);
+              }}
             />
           ))}
         </div>
@@ -186,11 +203,36 @@ export function ProductsPage() {
         )}
       </div>
 
-      {/* UMKM Detail Modal - Shows store info and all products */}
-      {selectedStand && (
-        <UMKMDetailModal
-          umkm={selectedStand}
-          onClose={() => setSelectedStand(null)}
+      {/* Direct Buy Checkout Modal */}
+      {buyNowProduct && (
+        <WhatsAppCheckoutModal
+          isOpen={!!buyNowProduct}
+          onClose={() => setBuyNowProduct(null)}
+          umkmName={buyNowProduct.stand.name}
+          umkmWhatsapp={buyNowProduct.stand.whatsapp || ""}
+          umkmLocation="Pasar UMKM Digital"
+          buyerName={user?.nama_lengkap || user?.name || ""}
+          buyerPhone={user?.no_telepon || ""}
+          businessId={buyNowProduct.stand.id}
+          menyediakanJasaKirim={buyNowProduct.stand.menyediakanJasaKirim}
+          namaBank={buyNowProduct.stand.namaBank}
+          noRekening={buyNowProduct.stand.noRekening}
+          atasNama={buyNowProduct.stand.atasNama}
+          items={[{
+            id: buyNowProduct.id,
+            name: buyNowProduct.name,
+            price: buyNowProduct.price,
+            quantity: 1,
+            image: buyNowProduct.image || "",
+            businessName: buyNowProduct.stand.name,
+            businessId: buyNowProduct.stand.id,
+            description: buyNowProduct.description || "",
+            category: buyNowProduct.category || "product",
+          }]}
+          total={buyNowProduct.price}
+          onCheckoutComplete={() => {
+            setBuyNowProduct(null);
+          }}
         />
       )}
     </div>

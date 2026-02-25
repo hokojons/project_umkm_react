@@ -1,5 +1,6 @@
 import { Calendar, MapPin, Users } from "lucide-react";
 import { forwardRef, useState, useEffect } from "react";
+import { API_BASE_URL, BASE_HOST } from "../config/api";
 
 interface Event {
   id: string;
@@ -29,9 +30,9 @@ export const EventsSection = forwardRef<HTMLElement, EventsSectionProps>(
 
     const loadEvents = async () => {
       try {
-        const response = await fetch('http://localhost:8000/api/events');
+        const response = await fetch(`${API_BASE_URL}/events`);
         const data = await response.json();
-        
+
         if (data.success && Array.isArray(data.data)) {
           setEvents(data.data);
         }
@@ -53,11 +54,14 @@ export const EventsSection = forwardRef<HTMLElement, EventsSectionProps>(
     const getStatus = (dateString: string): "upcoming" | "ongoing" | "past" => {
       const eventDate = new Date(dateString);
       const today = new Date();
+      // Reset time to compare dates only
+      eventDate.setHours(0, 0, 0, 0);
+      today.setHours(0, 0, 0, 0);
       const diffDays = Math.floor((eventDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-      
-      if (diffDays < 0) return "past";
-      if (diffDays <= 7) return "ongoing";
-      return "upcoming";
+
+      if (diffDays < 0) return "past";      // Event sudah lewat
+      if (diffDays === 0) return "ongoing";  // Event hari ini = sedang berlangsung
+      return "upcoming";                      // Event belum tiba
     };
 
     const getStatusBadge = (status: string) => {
@@ -148,17 +152,17 @@ export const EventsSection = forwardRef<HTMLElement, EventsSectionProps>(
           {eventsWithStatus.map((event) => {
             const badge = getStatusBadge(event.status);
             const defaultImage = "https://images.unsplash.com/photo-1540575467063-178a50c2df87?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800";
-            
+
             // Handle image URL
             let eventImage = defaultImage;
             if (event.image) {
               if (event.image.startsWith('http://') || event.image.startsWith('https://')) {
                 eventImage = event.image;
               } else {
-                eventImage = `http://localhost:8000/${event.image}`;
+                eventImage = `${BASE_HOST}/${event.image}`;
               }
             }
-            
+
             return (
               <div
                 key={event.id}

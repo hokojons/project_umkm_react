@@ -1,8 +1,9 @@
-import React, { useState } from "react";
-import { X } from "lucide-react";
+import React, { useState, useEffect, useCallback } from "react";
+import { X, CheckCircle, XCircle, Loader2, Eye, EyeOff, ArrowLeft, KeyRound, MessageCircle } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { toast } from "sonner";
 import { WhatsAppOtpModal } from "./WhatsAppOtpModal";
+import { API_BASE_URL } from "../config/api";
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -23,6 +24,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
   );
   const [verifiedPhoneNumber, setVerifiedPhoneNumber] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   // State untuk menyimpan data form sebelum 2FA verification
   const [pendingRegistration, setPendingRegistration] = useState<{
     email: string;
@@ -30,7 +32,97 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
     name: string;
     type: "user" | "business";
   } | null>(null);
+
+  // Email validation states
+  const [isCheckingEmail, setIsCheckingEmail] = useState(false);
+  const [emailStatus, setEmailStatus] = useState<"idle" | "available" | "taken" | "invalid">("idle");
+  const [emailMessage, setEmailMessage] = useState("");
+
+  // Forgot password states
+  const [forgotMode, setForgotMode] = useState(false);
+  const [forgotStep, setForgotStep] = useState<1 | 2 | 3>(1); // 1=email, 2=OTP, 3=new password
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotOtp, setForgotOtp] = useState("");
+  const [forgotNewPassword, setForgotNewPassword] = useState("");
+  const [forgotConfirmPassword, setForgotConfirmPassword] = useState("");
+  const [forgotPhone, setForgotPhone] = useState("");
+  const [forgotMaskedPhone, setForgotMaskedPhone] = useState("");
+  const [forgotOtpCode, setForgotOtpCode] = useState("");
+  const [forgotWaLink, setForgotWaLink] = useState("");
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+
   const { signIn, signUp } = useAuth();
+
+  // Debounce function for email check
+  const debounce = (func: Function, wait: number) => {
+    let timeout: NodeJS.Timeout;
+    return (...args: any[]) => {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => func(...args), wait);
+    };
+  };
+
+  // Check email availability
+  const checkEmailAvailability = async (emailToCheck: string) => {
+    if (!emailToCheck || !emailToCheck.includes("@")) {
+      setEmailStatus("idle");
+      setEmailMessage("");
+      return;
+    }
+
+    setIsCheckingEmail(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/check-email`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email: emailToCheck }),
+      });
+
+      const data = await response.json();
+
+      if (data.available) {
+        setEmailStatus("available");
+        setEmailMessage("✓ Email tersedia");
+      } else {
+        setEmailStatus("taken");
+        setEmailMessage("✗ Email sudah terdaftar");
+      }
+    } catch (error) {
+      console.error("Error checking email:", error);
+      setEmailStatus("idle");
+      setEmailMessage("");
+    } finally {
+      setIsCheckingEmail(false);
+    }
+  };
+
+  // Debounced email check (500ms delay)
+  const debouncedCheckEmail = useCallback(
+    debounce((emailValue: string) => {
+      if (isSignUp) {
+        checkEmailAvailability(emailValue);
+      }
+    }, 500),
+    [isSignUp]
+  );
+
+  // Handle email change
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newEmail = e.target.value;
+    setEmail(newEmail);
+
+    if (isSignUp && newEmail.includes("@")) {
+      setEmailStatus("idle");
+      setEmailMessage("");
+      debouncedCheckEmail(newEmail);
+    } else {
+      setEmailStatus("idle");
+      setEmailMessage("");
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -58,6 +150,13 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
           return;
         }
 
+        // Check if email is already taken
+        if (emailStatus === "taken") {
+          toast.error("Email sudah terdaftar. Silakan gunakan email lain atau login.");
+          setIsLoading(false);
+          return;
+        }
+
         // Tentukan tipe akun (user atau business/UMKM)
         const registrationType = createAsAdmin ? "business" : "user";
 
@@ -77,6 +176,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
         // LOGIN
         await signIn(email, password);
         toast.success("Berhasil masuk!");
+        onClose(); // Auto-close modal after successful login
       }
     } catch (error: any) {
       toast.error(error.message || "Terjadi kesalahan");
@@ -96,6 +196,112 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
     setPhoneNumber("");
     setShowWhatsAppOtp(false);
     setPendingRegistration(null);
+    // Reset email validation states
+    setEmailStatus("idle");
+    setEmailMessage("");
+    setIsCheckingEmail(false);
+    // Reset forgot password
+    setForgotMode(false);
+    setForgotStep(1);
+  };
+
+  // === FORGOT PASSWORD HANDLERS ===
+  const resetForgotState = () => {
+    setForgotMode(false);
+    setForgotStep(1);
+    setForgotEmail("");
+    setForgotOtp("");
+    setForgotNewPassword("");
+    setForgotConfirmPassword("");
+    setForgotPhone("");
+    setForgotMaskedPhone("");
+    setForgotOtpCode("");
+    setForgotWaLink("");
+    setForgotLoading(false);
+  };
+
+  // Step 1: Submit email to get OTP
+  const handleForgotSubmitEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!forgotEmail.trim()) return;
+    setForgotLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: forgotEmail }),
+      });
+      const data = await response.json();
+      if (data.success) {
+        setForgotPhone(data.data.phone_number);
+        setForgotMaskedPhone(data.data.masked_phone);
+        setForgotOtpCode(data.data.code);
+        setForgotWaLink(data.data.wa_link);
+        setForgotStep(2);
+        toast.success(`OTP dikirim ke WhatsApp ${data.data.masked_phone}`);
+      } else {
+        toast.error(data.message || "Email tidak ditemukan");
+      }
+    } catch (error: any) {
+      toast.error("Terjadi kesalahan. Coba lagi.");
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
+  // Step 2: Verify OTP
+  const handleForgotVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (forgotOtp.length !== 6) {
+      toast.error("Kode OTP harus 6 digit");
+      return;
+    }
+    // OTP is verified on the server when resetting, but we validate locally first
+    if (forgotOtp === forgotOtpCode) {
+      setForgotStep(3);
+      toast.success("Kode OTP benar! Silakan buat password baru.");
+    } else {
+      toast.error("Kode OTP salah. Periksa kembali.");
+    }
+  };
+
+  // Step 3: Reset password
+  const handleForgotResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (forgotNewPassword.length < 6) {
+      toast.error("Password minimal 6 karakter");
+      return;
+    }
+    if (forgotNewPassword !== forgotConfirmPassword) {
+      toast.error("Password dan konfirmasi tidak sama");
+      return;
+    }
+    setForgotLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/reset-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: forgotEmail,
+          phone_number: forgotPhone,
+          code: forgotOtp,
+          new_password: forgotNewPassword,
+        }),
+      });
+      const data = await response.json();
+      if (data.success) {
+        toast.success("Password berhasil direset! Silakan login.");
+        setEmail(forgotEmail);
+        setPassword("");
+        resetForgotState();
+      } else {
+        toast.error(data.message || "Gagal reset password");
+      }
+    } catch (error: any) {
+      toast.error("Terjadi kesalahan. Coba lagi.");
+    } finally {
+      setForgotLoading(false);
+    }
   };
 
   // Handle WhatsApp 2FA verification success
@@ -138,43 +344,234 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-md w-full p-6 relative shadow-2xl">
+    <div
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+      onClick={onClose} // Close when clicking backdrop
+    >
+      <div
+        className="bg-white dark:bg-gray-800 rounded-2xl max-w-md w-full p-6 relative shadow-2xl"
+        onClick={(e) => e.stopPropagation()} // Prevent closing when clicking modal content
+      >
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-full transition-colors"
+          className="absolute top-4 right-4 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors text-gray-500 dark:text-gray-400"
         >
           <X className="size-5" />
         </button>
 
-        <h2 className="mb-6">{isSignUp ? "Daftar Akun" : "Masuk"}</h2>
+        <h2 className="mb-6 text-gray-900 dark:text-white">
+          {forgotMode ? "Reset Password" : isSignUp ? "Daftar Akun" : "Masuk"}
+        </h2>
 
-        {!isSignUp ? (
+        {forgotMode ? (
+          // FORGOT PASSWORD FLOW
+          <div className="space-y-4">
+            {/* Step indicator */}
+            <div className="flex items-center gap-2 mb-4">
+              {[1, 2, 3].map((step) => (
+                <React.Fragment key={step}>
+                  <div className={`flex items-center justify-center size-8 rounded-full text-sm font-bold transition-all ${forgotStep >= step
+                    ? "bg-indigo-600 text-white"
+                    : "bg-gray-200 dark:bg-gray-600 text-gray-500 dark:text-gray-400"
+                    }`}>
+                    {step}
+                  </div>
+                  {step < 3 && (
+                    <div className={`flex-1 h-0.5 transition-all ${forgotStep > step ? "bg-indigo-600" : "bg-gray-200 dark:bg-gray-600"
+                      }`} />
+                  )}
+                </React.Fragment>
+              ))}
+            </div>
+
+            {forgotStep === 1 && (
+              // Step 1: Enter email
+              <form onSubmit={handleForgotSubmitEmail} className="space-y-4">
+                <div className="text-center mb-2">
+                  <KeyRound className="size-10 text-indigo-500 mx-auto mb-2" />
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Masukkan email akun Anda. Kami akan mengirim kode OTP ke WhatsApp terdaftar.
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm mb-2 text-gray-700 dark:text-gray-300">Email</label>
+                  <input
+                    type="email"
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    required
+                    placeholder="nama@email.com"
+                    autoFocus
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={forgotLoading}
+                  className="w-full bg-indigo-600 text-white py-3 rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50"
+                >
+                  {forgotLoading ? "Memproses..." : "Kirim Kode OTP"}
+                </button>
+              </form>
+            )}
+
+            {forgotStep === 2 && (
+              // Step 2: Verify OTP
+              <form onSubmit={handleForgotVerifyOtp} className="space-y-4">
+                <div className="text-center mb-2">
+                  <KeyRound className="size-10 text-green-500 mx-auto mb-2" />
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Masukkan kode OTP berikut untuk verifikasi
+                  </p>
+                </div>
+
+                {/* Show OTP code directly */}
+                <div className="bg-green-50 dark:bg-green-900/30 border-2 border-green-300 dark:border-green-700 rounded-xl p-4 text-center">
+                  <p className="text-xs text-green-600 dark:text-green-400 mb-2 font-medium">📋 Kode Verifikasi Anda</p>
+                  <p className="text-3xl font-mono font-bold text-green-800 dark:text-green-300 tracking-[0.5em] select-all">{forgotOtpCode}</p>
+                  <p className="text-xs text-green-500 dark:text-green-500 mt-2">Salin kode di atas dan masukkan di bawah</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm mb-2 text-gray-700 dark:text-gray-300">Masukkan Kode OTP</label>
+                  <input
+                    type="text"
+                    value={forgotOtp}
+                    onChange={(e) => setForgotOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-center text-xl tracking-[0.5em] font-mono"
+                    required
+                    placeholder="000000"
+                    maxLength={6}
+                    autoFocus
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={forgotOtp.length !== 6}
+                  className="w-full bg-indigo-600 text-white py-3 rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50"
+                >
+                  Verifikasi OTP
+                </button>
+              </form>
+            )}
+
+            {forgotStep === 3 && (
+              // Step 3: Set new password
+              <form onSubmit={handleForgotResetPassword} className="space-y-4">
+                <div className="text-center mb-2">
+                  <CheckCircle className="size-10 text-green-500 mx-auto mb-2" />
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    OTP terverifikasi! Silakan buat password baru.
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm mb-2 text-gray-700 dark:text-gray-300">Password Baru</label>
+                  <div className="relative">
+                    <input
+                      type={showNewPassword ? "text" : "password"}
+                      value={forgotNewPassword}
+                      onChange={(e) => setForgotNewPassword(e.target.value)}
+                      className="w-full px-4 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      required
+                      placeholder="Minimal 6 karakter"
+                      minLength={6}
+                      autoFocus
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                    >
+                      {showNewPassword ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm mb-2 text-gray-700 dark:text-gray-300">Konfirmasi Password</label>
+                  <input
+                    type={showNewPassword ? "text" : "password"}
+                    value={forgotConfirmPassword}
+                    onChange={(e) => setForgotConfirmPassword(e.target.value)}
+                    className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${forgotConfirmPassword && forgotConfirmPassword !== forgotNewPassword
+                      ? "border-red-500"
+                      : forgotConfirmPassword && forgotConfirmPassword === forgotNewPassword
+                        ? "border-green-500"
+                        : "border-gray-300 dark:border-gray-600"
+                      }`}
+                    required
+                    placeholder="Ulangi password baru"
+                    minLength={6}
+                  />
+                  {forgotConfirmPassword && forgotConfirmPassword !== forgotNewPassword && (
+                    <p className="text-sm text-red-500 mt-1">Password tidak sama</p>
+                  )}
+                </div>
+                <button
+                  type="submit"
+                  disabled={forgotLoading || forgotNewPassword.length < 6 || forgotNewPassword !== forgotConfirmPassword}
+                  className="w-full bg-indigo-600 text-white py-3 rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50"
+                >
+                  {forgotLoading ? "Memproses..." : "Reset Password"}
+                </button>
+              </form>
+            )}
+
+            {/* Back to login */}
+            <button
+              type="button"
+              onClick={resetForgotState}
+              className="w-full flex items-center justify-center gap-2 text-sm text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 mt-2"
+            >
+              <ArrowLeft className="size-4" />
+              Kembali ke halaman login
+            </button>
+          </div>
+        ) : !isSignUp ? (
           // LOGIN FORM
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm mb-2">Email</label>
+              <label className="block text-sm mb-2 text-gray-700 dark:text-gray-300">Email</label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 required
                 placeholder="nama@email.com"
               />
             </div>
 
             <div>
-              <label className="block text-sm mb-2">Password</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                required
-                placeholder="Minimal 6 karakter"
-                minLength={6}
-              />
+              <label className="block text-sm mb-2 text-gray-700 dark:text-gray-300">Password</label>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-4 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  required
+                  placeholder="Minimal 6 karakter"
+                  minLength={6}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                >
+                  {showPassword ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
+                </button>
+              </div>
+            </div>
+
+            {/* Forgot Password Link */}
+            <div className="text-right">
+              <button
+                type="button"
+                onClick={() => { setForgotMode(true); setForgotStep(1); }}
+                className="text-sm text-indigo-600 dark:text-indigo-400 hover:underline"
+              >
+                Lupa Password?
+              </button>
             </div>
 
             <button
@@ -189,91 +586,119 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
           // REGISTRATION FORM
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm mb-2">Nama Lengkap</label>
+              <label className="block text-sm mb-2 text-gray-700 dark:text-gray-300">Nama Lengkap</label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 required
                 placeholder="Masukkan nama lengkap"
               />
             </div>
 
             <div>
-              <label className="block text-sm mb-2">Email</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                required
-                placeholder="nama@email.com"
-              />
+              <label className="block text-sm mb-2 text-gray-700 dark:text-gray-300">Email</label>
+              <div className="relative">
+                <input
+                  type="email"
+                  value={email}
+                  onChange={handleEmailChange}
+                  className={`w-full px-4 py-2 pr-10 border rounded-lg focus:outline-none focus:ring-2 transition-colors bg-white dark:bg-gray-700 text-gray-900 dark:text-white ${emailStatus === "available"
+                    ? "border-green-500 focus:ring-green-500"
+                    : emailStatus === "taken"
+                      ? "border-red-500 focus:ring-red-500"
+                      : "border-gray-300 dark:border-gray-600 focus:ring-indigo-500"
+                    }`}
+                  required
+                  placeholder="nama@email.com"
+                />
+                {/* Status indicator */}
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                  {isCheckingEmail && (
+                    <Loader2 className="size-5 text-gray-400 animate-spin" />
+                  )}
+                  {!isCheckingEmail && emailStatus === "available" && (
+                    <CheckCircle className="size-5 text-green-500" />
+                  )}
+                  {!isCheckingEmail && emailStatus === "taken" && (
+                    <XCircle className="size-5 text-red-500" />
+                  )}
+                </div>
+              </div>
+              {/* Status message */}
+              {emailMessage && (
+                <p className={`text-sm mt-1 ${emailStatus === "available" ? "text-green-600" : "text-red-600"
+                  }`}>
+                  {emailMessage}
+                </p>
+              )}
             </div>
 
             <div>
-              <label className="block text-sm mb-2">Password</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                required
-                placeholder="Minimal 6 karakter"
-                minLength={6}
-              />
+              <label className="block text-sm mb-2 text-gray-700 dark:text-gray-300">Password</label>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-4 py-2 pr-10 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  required
+                  placeholder="Minimal 6 karakter"
+                  minLength={6}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                >
+                  {showPassword ? <EyeOff className="size-5" /> : <Eye className="size-5" />}
+                </button>
+              </div>
             </div>
 
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                id="businessType"
-                checked={createAsAdmin}
-                onChange={(e) => setCreateAsAdmin(e.target.checked)}
-                className="mr-2"
-              />
-              <label htmlFor="businessType" className="text-sm">
-                Daftar sebagai UMKM (Penjual)
-              </label>
-            </div>
+            {/* Phone number removed - will be captured from WhatsApp OTP verification */}
+
+
 
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || emailStatus === "taken" || isCheckingEmail}
               className="w-full bg-indigo-600 text-white py-3 rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? "Memproses..." : "Daftar"}
+              {isLoading ? "Memproses..." : isCheckingEmail ? "Memeriksa email..." : emailStatus === "taken" ? "Email sudah terdaftar" : "Daftar"}
             </button>
 
-            <p className="text-xs text-gray-500 text-center mt-3">
+            <p className="text-xs text-gray-500 dark:text-gray-400 text-center mt-3">
               💡 Setelah klik "Daftar", Anda akan diminta verifikasi nomor
               WhatsApp
             </p>
           </form>
         )}
 
-        <div className="mt-6 text-center space-y-4">
-          {!isSignUp && (
-            <button
-              type="button"
-              onClick={toggleMode}
-              className="text-indigo-600 hover:underline text-sm"
-            >
-              Belum punya akun? Daftar di sini
-            </button>
-          )}
+        {!forgotMode && (
+          <div className="mt-6 text-center space-y-4">
+            {!isSignUp && (
+              <button
+                type="button"
+                onClick={toggleMode}
+                className="text-indigo-600 dark:text-indigo-400 hover:underline text-sm"
+              >
+                Belum punya akun? Daftar di sini
+              </button>
+            )}
 
-          {isSignUp && (
-            <button
-              type="button"
-              onClick={toggleMode}
-              className="text-indigo-600 hover:underline text-sm mb-4"
-            >
-              Sudah punya akun? Masuk di sini
-            </button>
-          )}
-        </div>
+            {isSignUp && (
+              <button
+                type="button"
+                onClick={toggleMode}
+                className="text-indigo-600 dark:text-indigo-400 hover:underline text-sm mb-4"
+              >
+                Sudah punya akun? Masuk di sini
+              </button>
+            )}
+          </div>
+        )}
 
         {/* WhatsApp 2FA Modal - Triggered setelah user klik "Daftar" */}
         <WhatsAppOtpModal

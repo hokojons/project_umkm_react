@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { X, MessageCircle, Loader, MapPin, Phone } from "lucide-react";
 import { toast } from "sonner";
+import { API_BASE_URL } from "../config/api";
 
 interface OrderHistoryModalProps {
   isOpen: boolean;
@@ -81,7 +82,7 @@ export function OrderHistoryModal({
     setIsLoading(true);
     try {
       const response = await fetch(
-        "http://localhost:8000/api/orders/user/all",
+        `${API_BASE_URL}/orders/user/all`,
         {
           method: "GET",
           headers: {
@@ -110,7 +111,7 @@ export function OrderHistoryModal({
   const handleContactUMKM = async (order: Order) => {
     try {
       const response = await fetch(
-        `http://localhost:8000/api/orders/${order.id}`,
+        `${API_BASE_URL}/orders/${order.id}`,
         {
           method: "GET",
           headers: {
@@ -191,9 +192,8 @@ export function OrderHistoryModal({
                       </p>
                     </div>
                     <span
-                      className={`px-3 py-1 rounded-full text-sm font-medium ${
-                        statusColors[order.status_umkm] || "bg-gray-100"
-                      }`}
+                      className={`px-3 py-1 rounded-full text-sm font-medium ${statusColors[order.status_umkm] || "bg-gray-100"
+                        }`}
                     >
                       {statusTranslation[order.status_umkm] ||
                         order.status_umkm}

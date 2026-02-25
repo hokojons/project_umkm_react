@@ -10,11 +10,6 @@ export default defineConfig({
       host: "localhost",
       protocol: "ws",
     },
-    // Enable polling untuk development
-    watch: {
-      usePolling: true,
-      interval: 1000,
-    },
   },
   resolve: {
     extensions: [".js", ".jsx", ".ts", ".tsx", ".json"],

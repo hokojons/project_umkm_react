@@ -1,6 +1,7 @@
 import { Calendar, MapPin, X, Store, AlertCircle, Users } from "lucide-react";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { API_BASE_URL, BASE_HOST } from "../config/api";
 
 interface Event {
   id: string;
@@ -28,6 +29,8 @@ interface EventDetailModalProps {
   onApply?: () => void;
   userRole?: string;
   isLoggedIn: boolean;
+  hasApprovedUmkm?: boolean;
+  onRegisterStore?: () => void;
 }
 
 export function EventDetailModal({
@@ -36,15 +39,26 @@ export function EventDetailModal({
   onApply,
   userRole,
   isLoggedIn,
+  hasApprovedUmkm = false,
+  onRegisterStore,
 }: EventDetailModalProps) {
   const [isRegistering, setIsRegistering] = useState(false);
   const [showParticipants, setShowParticipants] = useState(false);
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [loadingParticipants, setLoadingParticipants] = useState(false);
+
+  // Get user data from localStorage to pre-fill form
+  const storedUser = localStorage.getItem("pasar_umkm_current_user");
+  const currentUser = storedUser ? JSON.parse(storedUser) : null;
+
+  // Also get profile data which may have phone number
+  const storedProfile = currentUser ? localStorage.getItem(`pasar_umkm_profile_${currentUser.id}`) : null;
+  const userProfile = storedProfile ? JSON.parse(storedProfile) : null;
+
   const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
+    name: currentUser?.name || currentUser?.namapengguna || currentUser?.nama_lengkap || "",
+    email: currentUser?.email || "",
+    phone: userProfile?.phone || currentUser?.phone || currentUser?.teleponpengguna || currentUser?.no_telepon || "",
     organization: "",
     notes: "",
   });
@@ -52,9 +66,9 @@ export function EventDetailModal({
   const loadParticipants = async () => {
     setLoadingParticipants(true);
     try {
-      const response = await fetch(`http://localhost:8000/api/events/${event.id}/participants`);
+      const response = await fetch(`${API_BASE_URL}/events/${event.id}/participants`);
       const data = await response.json();
-      
+
       if (data.success) {
         setParticipants(data.data);
       } else {
@@ -105,8 +119,11 @@ export function EventDetailModal({
   };
 
   const statusBadge = getStatusBadge(event.status);
+  // User can apply only if: logged in + UMKM role + has approved store + event not completed
   const canApply =
-    isLoggedIn && userRole === "umkm" && event.status !== "completed";
+    isLoggedIn && userRole === "umkm" && hasApprovedUmkm && event.status !== "completed";
+  // User is UMKM but doesn't have approved store
+  const needsToRegisterStore = isLoggedIn && userRole === "umkm" && !hasApprovedUmkm;
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -118,17 +135,17 @@ export function EventDetailModal({
 
     try {
       // Get user ID from localStorage if logged in
-      const userData = localStorage.getItem("pasar_umkm_user");
+      const userData = localStorage.getItem("pasar_umkm_current_user");
       const user = userData ? JSON.parse(userData) : null;
 
-      const response = await fetch('http://localhost:8000/api/events/register', {
+      const response = await fetch(`${API_BASE_URL}/events/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          event_id: event.id,
-          user_id: user?.id || null,
+          event_id: String(event.id),
+          user_id: user?.id ? String(user.id) : null,
           name: formData.name,
           email: formData.email,
           phone: formData.phone,
@@ -160,9 +177,16 @@ export function EventDetailModal({
         {event.image && (
           <div className="relative h-64 md:h-80">
             <img
-              src={event.image}
+              src={
+                event.image.startsWith('http://') || event.image.startsWith('https://')
+                  ? event.image
+                  : `${BASE_HOST}/${event.image}`
+              }
               alt={event.name}
               className="w-full h-full object-cover rounded-t-2xl"
+              onError={(e) => {
+                e.currentTarget.src = "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&q=80";
+              }}
             />
             <button
               onClick={onClose}
@@ -290,11 +314,10 @@ export function EventDetailModal({
                         </div>
                       </div>
                       <span
-                        className={`px-2 py-1 rounded text-xs ${
-                          participant.status === 'aktif'
-                            ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
-                            : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
-                        }`}
+                        className={`px-2 py-1 rounded text-xs ${participant.status === 'aktif'
+                          ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
+                          : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
+                          }`}
                       >
                         {participant.status}
                       </span>
@@ -318,7 +341,7 @@ export function EventDetailModal({
           </div>
 
           {/* Benefits for UMKM */}
-          <div className="mb-8 p-6 bg-gradient-to-br from-purple-50 to-pink-50 dark:bg-gray-700 rounded-lg">
+          <div className="mb-8 p-6 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/30 dark:to-pink-900/30 rounded-lg">
             <h3 className="mb-4 flex items-center gap-2 text-gray-900 dark:text-white">
               <Store className="size-5 text-purple-600 dark:text-purple-400" />
               Keuntungan Berjualan di Event Ini
@@ -395,6 +418,29 @@ export function EventDetailModal({
                   </div>
                 </div>
               </div>
+            ) : needsToRegisterStore ? (
+              <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <Store className="size-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-blue-900 dark:text-blue-300 mb-1">
+                      Daftarkan Toko UMKM Anda
+                    </p>
+                    <p className="text-sm text-blue-700 dark:text-blue-400 mb-3">
+                      Anda belum memiliki toko UMKM yang terdaftar. Silakan daftarkan toko Anda terlebih dahulu untuk bisa mengajukan berjualan di event ini.
+                    </p>
+                    {onRegisterStore && (
+                      <button
+                        onClick={onRegisterStore}
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition-colors font-medium flex items-center justify-center gap-2"
+                      >
+                        <Store className="size-4" />
+                        Daftar Toko UMKM
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
             ) : event.status === "completed" ? (
               <div className="p-4 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg">
                 <div className="flex items-start gap-3">
@@ -415,7 +461,13 @@ export function EventDetailModal({
             {/* Registration Form or Button */}
             {event.status !== "completed" && !isRegistering && (
               <button
-                onClick={() => setIsRegistering(true)}
+                onClick={() => {
+                  if (!isLoggedIn) {
+                    toast.error("Silakan login atau buat akun terlebih dahulu sebelum mendaftar event");
+                    return;
+                  }
+                  setIsRegistering(true);
+                }}
                 className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-lg transition-colors font-medium flex items-center justify-center gap-2"
               >
                 <Users className="size-5" />
@@ -428,7 +480,7 @@ export function EventDetailModal({
                 <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
                   Form Pendaftaran Pengunjung
                 </h4>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Nama Lengkap *

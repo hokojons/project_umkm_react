@@ -12,6 +12,7 @@ import {
   Users,
 } from "lucide-react";
 import { useState, useEffect } from "react";
+import { API_BASE_URL } from "../config/api";
 
 interface Event {
   id: string;
@@ -42,7 +43,7 @@ export default function EventBazarModal({
   // Load events from API on mount
   useEffect(() => {
     if (isOpen && events.length === 0) {
-      fetch('http://localhost:8000/api/events')
+      fetch(`${API_BASE_URL}/events`)
         .then(res => res.json())
         .then(data => {
           if (data.success && Array.isArray(data.data)) {
@@ -131,11 +132,10 @@ export default function EventBazarModal({
                   <button
                     key={index}
                     onClick={() => setCurrentImageIndex(index)}
-                    className={`w-2 h-2 rounded-full transition ${
-                      index === currentImageIndex
+                    className={`w-2 h-2 rounded-full transition ${index === currentImageIndex
                         ? "bg-white w-6"
                         : "bg-white/50 hover:bg-white/75"
-                    }`}
+                      }`}
                   />
                 ))}
               </div>

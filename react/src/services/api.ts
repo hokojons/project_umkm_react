@@ -25,13 +25,26 @@ export const apiClient: AxiosInstance = axios.create({
   validateStatus: (status) => status >= 200 && status < 300,
 });
 
-// Request interceptor - Add auth token
+// Request interceptor - Add auth token and user ID
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = localStorage.getItem("pasar_umkm_access_token");
+    const userStr = localStorage.getItem("pasar_umkm_current_user");
 
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    // Add X-User-ID header for backend
+    if (userStr && config.headers) {
+      try {
+        const user = JSON.parse(userStr);
+        if (user?.id) {
+          config.headers["X-User-ID"] = user.id;
+        }
+      } catch {
+        // Ignore parse errors
+      }
     }
 
     return config;
@@ -70,7 +83,9 @@ apiClient.interceptors.response.use(
 
     // Handle server errors
     if (error.response?.status === 500) {
-      throw new Error("Server error. Please try again later.");
+      const serverMessage = error.response?.data?.message || "Server error. Please try again later.";
+      console.error("Server Error Details:", error.response?.data);
+      throw new Error(serverMessage);
     }
 
     // Handle network errors - but don't throw generic error for protocol issues

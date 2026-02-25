@@ -1,4 +1,5 @@
 import { Calendar, MapPin, Store } from "lucide-react";
+import { BASE_HOST } from "../config/api";
 
 interface EventCardProps {
   event: {
@@ -65,7 +66,7 @@ export function EventCard({
             src={
               event.image.startsWith('http://') || event.image.startsWith('https://')
                 ? event.image
-                : `http://localhost:8000/${event.image}`
+                : `${BASE_HOST}/${event.image}`
             }
             alt={event.name}
             className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"

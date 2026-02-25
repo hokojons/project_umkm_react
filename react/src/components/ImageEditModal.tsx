@@ -95,6 +95,12 @@ export function ImageEditModal({
             return;
         }
 
+        // Check file size (max 2MB)
+        if (file.size > 2 * 1024 * 1024) {
+            toast.error('Ukuran file maksimal 2MB');
+            return;
+        }
+
         // Show loading
         toast.loading('Compressing image...');
 
@@ -218,8 +224,8 @@ export function ImageEditModal({
                             <button
                                 onClick={() => setUploadMode('url')}
                                 className={`flex-1 px-4 py-2 rounded-lg border-2 transition-colors ${uploadMode === 'url'
-                                        ? 'border-orange-500 bg-orange-50 text-orange-700'
-                                        : 'border-gray-300 text-gray-700 hover:border-gray-400'
+                                    ? 'border-orange-500 bg-orange-50 text-orange-700'
+                                    : 'border-gray-300 text-gray-700 hover:border-gray-400'
                                     }`}
                             >
                                 Enter URL
@@ -227,8 +233,8 @@ export function ImageEditModal({
                             <button
                                 onClick={() => setUploadMode('file')}
                                 className={`flex-1 px-4 py-2 rounded-lg border-2 transition-colors flex items-center justify-center gap-2 ${uploadMode === 'file'
-                                        ? 'border-orange-500 bg-orange-50 text-orange-700'
-                                        : 'border-gray-300 text-gray-700 hover:border-gray-400'
+                                    ? 'border-orange-500 bg-orange-50 text-orange-700'
+                                    : 'border-gray-300 text-gray-700 hover:border-gray-400'
                                     }`}
                             >
                                 <Upload className="w-4 h-4" />

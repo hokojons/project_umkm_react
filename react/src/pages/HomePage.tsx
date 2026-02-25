@@ -1,19 +1,18 @@
 import { useState, useEffect, useRef } from "react";
-import { Store, Star, MapPin, ArrowRight } from "lucide-react";
+import { Store, MapPin, ArrowRight } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { HeroSection } from "../components/HeroSection";
 import { FeaturedSection } from "../components/FeaturedSection";
 import { SpecialPackagesSection } from "../components/SpecialPackagesSection";
-import { UMKMDetailModal } from "../components/UMKMDetailModal";
 import { FoodStand } from "../types";
 import { foodStands } from "../data/stands";
 import { getImageUrl, getPlaceholderDataUrl, handleImageError } from "../utils/imageHelpers";
+import { API_BASE_URL } from "../config/api";
 
 export function HomePage() {
   const standsRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const [umkmList, setUmkmList] = useState<FoodStand[]>([]);
-  const [selectedUmkm, setSelectedUmkm] = useState<FoodStand | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -22,13 +21,10 @@ export function HomePage() {
 
   const loadUMKM = async () => {
     try {
-      console.log("📡 Fetching UMKM data from API...");
-      const response = await fetch("http://localhost:8000/api/umkm");
+      const response = await fetch(`${API_BASE_URL}/umkm`);
       const data = await response.json();
-      console.log("✅ API Response:", data);
 
       if (data.success && Array.isArray(data.data)) {
-        console.log(`📊 Found ${data.data.length} UMKM from API`);
         const apiStands: FoodStand[] = data.data.map((umkm: any) => {
           const products =
             umkm.products?.map((product: any) => {
@@ -37,19 +33,20 @@ export function HomePage() {
                 name: product.nama_produk,
                 description: product.deskripsi,
                 price: parseFloat(product.harga),
-                image: getImageUrl(product.gambar, "http://localhost:8000", getPlaceholderDataUrl("Produk")),
+                image: getImageUrl(product.gambar, undefined, getPlaceholderDataUrl("Produk")),
                 category: product.kategori || "Lainnya",
+                stock: product.stok ?? 0,
                 available: product.stok > 0,
               };
             }) || [];
 
           return {
             id: String(umkm.id),
-            name: umkm.nama_toko, // Fixed: was nama_bisnis
+            name: umkm.nama_toko,
             description: umkm.deskripsi || "Produk berkualitas dari UMKM lokal",
-            category: umkm.category?.nama_kategori || "Lainnya",
+            category: umkm.kategori || umkm.category?.nama_kategori || "Lainnya",
             rating: parseFloat(umkm.rating) || 4.5,
-            image: getImageUrl(umkm.foto_toko, "http://localhost:8000", getPlaceholderDataUrl(umkm.nama_toko)),
+            image: getImageUrl(umkm.foto_toko, undefined, getPlaceholderDataUrl(umkm.nama_toko)),
             menu: products,
             isActive: umkm.status === "active",
             owner: umkm.nama_pemilik,
@@ -60,9 +57,6 @@ export function HomePage() {
         });
 
         const activeStands = apiStands.filter((stand) => stand.isActive);
-        console.log(`✅ Active UMKM: ${activeStands.length}`);
-        console.log(`📦 Dummy stands: ${foodStands.length}`);
-        console.log(`🎯 Total stands to display: ${foodStands.length + activeStands.length}`);
         setUmkmList([...foodStands, ...activeStands]);
       } else {
         setUmkmList(foodStands);
@@ -120,7 +114,7 @@ export function HomePage() {
                 {umkmList.map((umkm) => (
                   <div
                     key={umkm.id}
-                    onClick={() => setSelectedUmkm(umkm)}
+                    onClick={() => navigate(`/umkm/${umkm.id}`)}
                     className="bg-white dark:bg-gray-700 rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer group border border-gray-200 dark:border-gray-600 hover:scale-105"
                   >
                     <div className="relative aspect-square bg-gray-200 dark:bg-gray-600 overflow-hidden">
@@ -130,12 +124,6 @@ export function HomePage() {
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                         onError={(e) => handleImageError(e, umkm.name)}
                       />
-                      <div className="absolute top-2 right-2 bg-white/90 dark:bg-gray-800/90 px-2 py-1 rounded-full flex items-center gap-1">
-                        <Star className="w-3 h-3 text-orange-500 fill-current" />
-                        <span className="text-xs font-semibold text-gray-800 dark:text-white">
-                          {umkm.rating}
-                        </span>
-                      </div>
                     </div>
                     <div className="p-3">
                       <h3 className="font-bold text-sm md:text-base text-gray-800 dark:text-white mb-1 line-clamp-1">
@@ -190,14 +178,6 @@ export function HomePage() {
           </button>
         </div>
       </section>
-
-      {/* UMKM Detail Modal */}
-      {selectedUmkm && (
-        <UMKMDetailModal
-          umkm={selectedUmkm}
-          onClose={() => setSelectedUmkm(null)}
-        />
-      )}
     </div>
   );
 }

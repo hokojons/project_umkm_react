@@ -4,6 +4,9 @@ import { EventList } from "../components/EventList";
 import { EventApplicationModal } from "../components/EventApplicationModal";
 import EventBazarModal from "../components/EventBazarModal";
 import { EventDetailModal } from "../components/EventDetailModal";
+import { SubmitBusinessModal } from "../components/SubmitBusinessModal";
+import { toast } from "sonner";
+import { API_BASE_URL } from "../config/api";
 
 export function EventsPage() {
   const [searchParams] = useSearchParams();
@@ -12,13 +15,44 @@ export function EventsPage() {
   const [selectedEventId, setSelectedEventId] = useState<string>("");
   const [showEventDetail, setShowEventDetail] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
+  const [isSubmitBusinessOpen, setIsSubmitBusinessOpen] = useState(false);
+  const [hasApprovedUmkm, setHasApprovedUmkm] = useState(false);
+
+  // Check if user is logged in from localStorage
+  const userData = localStorage.getItem("pasar_umkm_current_user");
+  const isLoggedIn = !!userData;
+  const user = userData ? JSON.parse(userData) : null;
+  const userRole = user?.role || "customer";
+
+  // Check if user has approved UMKM
+  useEffect(() => {
+    const checkUmkmStatus = async () => {
+      if (user?.role === "umkm" && user?.id) {
+        try {
+          const response = await fetch(`${API_BASE_URL}/umkm/my-umkm`, {
+            headers: {
+              "X-User-ID": String(user.id),
+            },
+          });
+          const data = await response.json();
+          if (data.success && data.data && data.data.length > 0) {
+            const hasApproved = data.data.some((u: any) => u.status === "active");
+            setHasApprovedUmkm(hasApproved);
+          }
+        } catch (error) {
+          console.error("Error checking UMKM status:", error);
+        }
+      }
+    };
+    checkUmkmStatus();
+  }, [user?.id, user?.role]);
 
   // Check for eventId in URL params
   useEffect(() => {
     const eventId = searchParams.get("eventId");
     if (eventId) {
-      // Load event from API
-      fetch(`http://localhost:8000/api/events/${eventId}`)
+
+      fetch(`${API_BASE_URL}/events/${eventId}`)
         .then(res => res.json())
         .then(data => {
           if (data.success && data.data) {
@@ -33,6 +67,11 @@ export function EventsPage() {
   const handleApplyToEvent = (eventId: string) => {
     setSelectedEventId(eventId);
     setIsEventApplicationOpen(true);
+  };
+
+  const handleRegisterStore = () => {
+    setShowEventDetail(false);
+    setIsSubmitBusinessOpen(true);
   };
 
   return (
@@ -52,8 +91,8 @@ export function EventsPage() {
         <EventList
           onApplyToEvent={handleApplyToEvent}
           showApplyButton={true}
-          userRole="customer"
-          isLoggedIn={true}
+          userRole={userRole}
+          isLoggedIn={isLoggedIn}
         />
       </div>
 
@@ -70,8 +109,10 @@ export function EventsPage() {
             setSelectedEventId(selectedEvent.id);
             setIsEventApplicationOpen(true);
           }}
-          userRole="user"
-          isLoggedIn={false}
+          userRole={userRole}
+          isLoggedIn={isLoggedIn}
+          hasApprovedUmkm={hasApprovedUmkm}
+          onRegisterStore={handleRegisterStore}
         />
       )}
 
@@ -80,6 +121,7 @@ export function EventsPage() {
           isOpen={isEventApplicationOpen}
           onClose={() => setIsEventApplicationOpen(false)}
           eventId={selectedEventId}
+          onRegisterStore={handleRegisterStore}
         />
       )}
 
@@ -87,6 +129,13 @@ export function EventsPage() {
         <EventBazarModal
           isOpen={isEventBazarOpen}
           onClose={() => setIsEventBazarOpen(false)}
+        />
+      )}
+
+      {isSubmitBusinessOpen && (
+        <SubmitBusinessModal
+          isOpen={isSubmitBusinessOpen}
+          onClose={() => setIsSubmitBusinessOpen(false)}
         />
       )}
     </div>

@@ -1,35 +1,48 @@
 import { useState, useEffect } from "react";
-import { X, Package, Clock, MapPin, Truck, Zap } from "lucide-react";
+import { X, Package, Clock, Store, MessageCircle, CheckCircle, XCircle, Loader2, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "./ui/button";
-import { TrackingModal } from "./TrackingModal";
 import { useAuth } from "../context/AuthContext";
 import { toast } from "sonner";
+import { orderService } from "../services/orderService";
+import { ImageWithFallback } from "./figma/ImageWithFallback";
 
 interface OrderItem {
   id: string;
-  name: string;
-  price: number;
-  quantity: number;
-  businessName: string;
-  image?: string;
+  product_id: string;
+  jumlah: number;
+  harga_satuan: number;
+  subtotal: number;
+  product?: {
+    id: string;
+    nama_produk: string;
+    image_url?: string;
+    gambar?: string;
+  };
 }
 
 interface Order {
   id: string;
+  user_id: string;
+  business_id: string;
+  no_whatsapp_pembeli: string;
+  catatan?: string;
+  catatan_pembayaran?: string;
+  total_harga: number;
+  status: string;
+  status_umkm?: string;
+  created_at: string;
+  updated_at: string;
   items: OrderItem[];
-  totalAmount: number;
-  shippingAddress: {
-    name: string;
-    phone: string;
-    address: string;
-    city: string;
-    postalCode: string;
+  business?: {
+    id: string;
+    nama_usaha?: string;
+    nama_umkm?: string;
+    no_whatsapp?: string;
+    user?: {
+      name?: string;
+      nama_lengkap?: string;
+    };
   };
-  paymentMethod: string;
-  status: "pending" | "processing" | "shipped" | "delivered" | "cancelled";
-  createdAt: string;
-  hasTracking: boolean;
-  userId: string;
 }
 
 interface OrderHistoryModalProps {
@@ -39,8 +52,10 @@ interface OrderHistoryModalProps {
 
 export function OrderHistoryModal({ isOpen, onClose }: OrderHistoryModalProps) {
   const [orders, setOrders] = useState<Order[]>([]);
-  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
-  const [isTrackingOpen, setIsTrackingOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [expandedOrders, setExpandedOrders] = useState<Set<string>>(new Set());
+  const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
+  const [paymentNotes, setPaymentNotes] = useState<Record<string, string>>({});
   const { user } = useAuth();
 
   useEffect(() => {
@@ -49,38 +64,18 @@ export function OrderHistoryModal({ isOpen, onClose }: OrderHistoryModalProps) {
     }
   }, [isOpen, user]);
 
-  const loadOrders = () => {
-    // Load orders from localStorage
-    const allOrders = localStorage.getItem("pasar_umkm_orders");
-    if (allOrders) {
-      const parsedOrders: Order[] = JSON.parse(allOrders);
-      // Filter orders for current user and add tracking status
-      let userOrders: Order[] = [];
-
-      if (user) {
-        userOrders = parsedOrders.filter(
-          (order) =>
-            order.userId === user.id ||
-            order.shippingAddress?.name === user.name
-        );
-      } else {
-        // If no user logged in, show recent orders (guest mode)
-        userOrders = parsedOrders.filter((order) => order.userId === "guest");
-      }
-
-      userOrders = userOrders
-        .map((order) => ({
-          ...order,
-          hasTracking: localStorage.getItem(`tracking_${order.id}`) !== null,
-        }))
-        .sort(
-          (a, b) =>
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
-
-      setOrders(userOrders);
-    } else {
-      setOrders([]);
+  const loadOrders = async () => {
+    setLoading(true);
+    try {
+      const data = await orderService.getUserOrders();
+      setOrders(data as unknown as Order[]);
+      // Default all orders to expanded
+      setExpandedOrders(new Set((data as unknown as Order[]).map(o => o.id)));
+    } catch (error) {
+      console.error("Failed to load orders:", error);
+      toast.error("Gagal memuat riwayat pesanan");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -105,17 +100,19 @@ export function OrderHistoryModal({ isOpen, onClose }: OrderHistoryModalProps) {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "pending":
-        return "bg-yellow-100 text-yellow-800";
+        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400";
+      case "paid":
+        return "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400";
       case "processing":
-        return "bg-blue-100 text-blue-800";
+        return "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400";
       case "shipped":
-        return "bg-indigo-100 text-indigo-800";
-      case "delivered":
-        return "bg-green-100 text-green-800";
+        return "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400";
+      case "completed":
+        return "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400";
       case "cancelled":
-        return "bg-red-100 text-red-800";
+        return "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300";
     }
   };
 
@@ -123,12 +120,14 @@ export function OrderHistoryModal({ isOpen, onClose }: OrderHistoryModalProps) {
     switch (status) {
       case "pending":
         return "Menunggu Pembayaran";
+      case "paid":
+        return "Sudah Dibayar";
       case "processing":
         return "Sedang Diproses";
       case "shipped":
-        return "Sedang Dikirim";
-      case "delivered":
-        return "Terkirim";
+        return "Dikirim / Siap Diambil";
+      case "completed":
+        return "Selesai";
       case "cancelled":
         return "Dibatalkan";
       default:
@@ -136,223 +135,304 @@ export function OrderHistoryModal({ isOpen, onClose }: OrderHistoryModalProps) {
     }
   };
 
-  const handleTrackOrder = (orderId: string) => {
-    setSelectedOrderId(orderId);
-    setIsTrackingOpen(true);
+  const toggleExpand = (orderId: string) => {
+    setExpandedOrders(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(orderId)) {
+        newSet.delete(orderId);
+      } else {
+        newSet.add(orderId);
+      }
+      return newSet;
+    });
   };
 
-  const handleSkipPayment = (orderId: string) => {
-    // Update order status to processing
-    const allOrders = localStorage.getItem("pasar_umkm_orders");
-    if (allOrders) {
-      const parsedOrders: Order[] = JSON.parse(allOrders);
-      const updatedOrders = parsedOrders.map((order) => {
-        if (order.id === orderId) {
-          return { ...order, status: "processing" as const };
-        }
-        return order;
-      });
-      localStorage.setItem("pasar_umkm_orders", JSON.stringify(updatedOrders));
-
-      // Update tracking to processing
-      const trackingData = localStorage.getItem(`tracking_${orderId}`);
-      if (trackingData) {
-        const tracking = JSON.parse(trackingData);
-        const now = new Date();
-
-        tracking.currentStatus = "payment_confirmed";
-        tracking.currentStatusText = "Pembayaran Dikonfirmasi";
-        tracking.history.push({
-          id: `hist_${tracking.history.length}`,
-          status: "payment_confirmed",
-          statusText: "Pembayaran Dikonfirmasi",
-          location: tracking.shippingCity,
-          description: "Pembayaran telah dikonfirmasi, pesanan sedang dikemas",
-          timestamp: now.toISOString(),
-          icon: "check",
-        });
-
-        localStorage.setItem(`tracking_${orderId}`, JSON.stringify(tracking));
-      }
-
-      loadOrders();
-      toast.success("Pembayaran berhasil! Pesanan sedang diproses.");
+  const handleUpdateStatus = async (orderId: string, newStatus: 'paid' | 'completed' | 'cancelled') => {
+    setUpdatingStatus(orderId);
+    try {
+      const note = paymentNotes[orderId];
+      await orderService.updateStatusByCustomer(orderId, newStatus, note);
+      toast.success(`Status berhasil diubah ke "${getStatusText(newStatus)}"`);
+      await loadOrders();
+    } catch (error: unknown) {
+      console.error("Failed to update status:", error);
+      const message = error instanceof Error ? error.message : "Gagal mengubah status";
+      toast.error(message);
+    } finally {
+      setUpdatingStatus(null);
     }
+  };
+
+  const handleResendWhatsApp = async (order: Order) => {
+    try {
+      const data = await orderService.getWhatsAppLink(order.id);
+      window.open(data.whatsapp_link, "_blank");
+    } catch {
+      // Fallback: generate link manually
+      const businessPhone = order.business?.no_whatsapp || "";
+      if (businessPhone) {
+        const cleanPhone = businessPhone.replace(/\D/g, "").replace(/^0/, "62");
+        const waLink = `https://wa.me/${cleanPhone}`;
+        window.open(waLink, "_blank");
+      } else {
+        toast.error("Nomor WhatsApp UMKM tidak tersedia");
+      }
+    }
+  };
+
+  const getBusinessName = (order: Order) => {
+    return order.business?.nama_usaha ||
+      order.business?.nama_umkm ||
+      order.business?.user?.name ||
+      order.business?.user?.nama_lengkap ||
+      "UMKM";
   };
 
   if (!isOpen) return null;
 
   return (
-    <>
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white dark:bg-gray-800 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
-          {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-200">
-            <h2 className="text-2xl font-bold text-gray-900">
-              Riwayat Pesanan
-            </h2>
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
-            >
-              <X className="w-6 h-6" />
-            </button>
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
+        {/* Header */}
+        <div className="flex items-center justify-between p-5 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-indigo-500 to-purple-600">
+          <div className="flex items-center gap-3 text-white">
+            <Package className="size-6" />
+            <h2 className="text-xl font-bold">Riwayat Pesanan</h2>
           </div>
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-white/20 rounded-full transition-colors text-white"
+          >
+            <X className="size-5" />
+          </button>
+        </div>
 
-          {/* Content */}
-          <div className="flex-1 overflow-y-auto p-6">
-            {orders.length === 0 ? (
-              <div className="text-center py-12">
-                <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-600 mb-2">Belum ada riwayat pesanan</p>
-                <p className="text-sm text-gray-500">
-                  Pesanan Anda akan muncul di sini
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {orders.map((order) => (
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto p-5">
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-12">
+              <Loader2 className="size-8 text-indigo-500 animate-spin mb-3" />
+              <p className="text-gray-500 dark:text-gray-400">Memuat pesanan...</p>
+            </div>
+          ) : orders.length === 0 ? (
+            <div className="text-center py-12">
+              <Package className="size-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+              <p className="text-gray-600 dark:text-gray-400 mb-2">Belum ada riwayat pesanan</p>
+              <p className="text-sm text-gray-500 dark:text-gray-500">
+                Pesanan Anda akan muncul di sini setelah checkout
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {orders.map((order) => {
+                const isExpanded = expandedOrders.has(order.id);
+                const isUpdating = updatingStatus === order.id;
+
+                return (
                   <div
                     key={order.id}
-                    className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                    className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden bg-white dark:bg-gray-800 shadow-sm"
                   >
                     {/* Order Header */}
-                    <div className="flex items-start justify-between mb-4">
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <p className="font-medium text-gray-900">
-                            Order #{order.id.slice(-8)}
+                    <div
+                      className="p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition"
+                      onClick={() => toggleExpand(order.id)}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <p className="font-semibold text-gray-900 dark:text-white">
+                              {getBusinessName(order)}
+                            </p>
+                            <span className={`text-xs px-2 py-1 rounded-full font-medium ${getStatusColor(order.status)}`}>
+                              {getStatusText(order.status)}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
+                            <div className="flex items-center gap-1">
+                              <Store className="size-4" />
+                              <span>{getBusinessName(order)}</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Clock className="size-4" />
+                              <span>{formatDate(order.created_at)}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-right flex items-center gap-2">
+                          <div>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">Total</p>
+                            <p className="font-bold text-indigo-600 dark:text-indigo-400">
+                              {formatCurrency(order.total_harga)}
+                            </p>
+                          </div>
+                          {isExpanded ? (
+                            <ChevronUp className="size-5 text-gray-400" />
+                          ) : (
+                            <ChevronDown className="size-5 text-gray-400" />
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Expanded Content */}
+                    {isExpanded && (
+                      <div className="border-t border-gray-200 dark:border-gray-700">
+                        {/* Order Items */}
+                        <div className="p-4 bg-gray-50 dark:bg-gray-900/50">
+                          <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                            Item Pesanan ({order.items?.length || 0})
                           </p>
-                          <span
-                            className={`text-xs px-2 py-1 rounded-full ${getStatusColor(
-                              order.status
-                            )}`}
-                          >
-                            {getStatusText(order.status)}
-                          </span>
+                          <div className="space-y-2">
+                            {order.items?.map((item) => (
+                              <div key={item.id} className="flex items-center gap-3 bg-white dark:bg-gray-800 p-2 rounded-lg">
+                                {item.product?.image_url || item.product?.gambar ? (
+                                  <ImageWithFallback
+                                    src={item.product.image_url || item.product.gambar || ""}
+                                    alt={item.product?.nama_produk || "Product"}
+                                    className="w-12 h-12 rounded-lg object-cover"
+                                  />
+                                ) : (
+                                  <div className="w-12 h-12 rounded-lg bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                                    <Package className="size-6 text-gray-400" />
+                                  </div>
+                                )}
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                                    {item.product?.nama_produk || "Produk"}
+                                  </p>
+                                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                                    {item.jumlah}x {formatCurrency(item.harga_satuan)}
+                                  </p>
+                                </div>
+                                <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                                  {formatCurrency(item.subtotal)}
+                                </p>
+                              </div>
+                            ))}
+                          </div>
                         </div>
-                        <div className="flex items-center gap-4 text-sm text-gray-600">
-                          <div className="flex items-center gap-1">
-                            <Clock className="w-4 h-4" />
-                            {formatDate(order.createdAt)}
+
+                        {/* Payment Note Input (for pending orders) */}
+                        {order.status === "pending" && (
+                          <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                              📝 Catatan Pembayaran (opsional)
+                            </label>
+                            <textarea
+                              value={paymentNotes[order.id] || ""}
+                              onChange={(e) => setPaymentNotes(prev => ({ ...prev, [order.id]: e.target.value }))}
+                              placeholder="Contoh: Transfer via BCA Rp 150.000 an. John Doe"
+                              className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none"
+                              rows={2}
+                            />
                           </div>
-                          <div className="flex items-center gap-1">
-                            <MapPin className="w-4 h-4" />
-                            {order.shippingAddress.city}
+                        )}
+
+                        {/* Existing Payment Note */}
+                        {order.catatan_pembayaran && (
+                          <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-blue-50 dark:bg-blue-900/20">
+                            <p className="text-sm font-medium text-blue-800 dark:text-blue-300 mb-1">
+                              📝 Catatan Pembayaran:
+                            </p>
+                            <p className="text-sm text-blue-700 dark:text-blue-400">
+                              {order.catatan_pembayaran}
+                            </p>
                           </div>
+                        )}
+
+                        {/* Action Buttons */}
+                        <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex flex-wrap gap-2">
+                          {/* WhatsApp Button - Always show */}
+                          <Button
+                            onClick={(e) => { e.stopPropagation(); handleResendWhatsApp(order); }}
+                            variant="outline"
+                            size="sm"
+                            className="flex items-center gap-2"
+                          >
+                            <MessageCircle className="size-4" />
+                            Chat WhatsApp
+                          </Button>
+
+                          {/* Status Update Buttons based on current status */}
+                          {order.status === "pending" && (
+                            <>
+                              <Button
+                                onClick={(e) => { e.stopPropagation(); handleUpdateStatus(order.id, "paid"); }}
+                                disabled={isUpdating}
+                                size="sm"
+                                className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white"
+                              >
+                                {isUpdating ? (
+                                  <Loader2 className="size-4 animate-spin" />
+                                ) : (
+                                  <CheckCircle className="size-4" />
+                                )}
+                                Sudah Bayar
+                              </Button>
+                              <Button
+                                onClick={(e) => { e.stopPropagation(); handleUpdateStatus(order.id, "cancelled"); }}
+                                disabled={isUpdating}
+                                variant="outline"
+                                size="sm"
+                                className="flex items-center gap-2 text-red-600 border-red-300 hover:bg-red-50"
+                              >
+                                <XCircle className="size-4" />
+                                Batalkan
+                              </Button>
+                            </>
+                          )}
+
+                          {(order.status === "processing" || order.status === "shipped") && (
+                            <Button
+                              onClick={(e) => { e.stopPropagation(); handleUpdateStatus(order.id, "completed"); }}
+                              disabled={isUpdating}
+                              size="sm"
+                              className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white"
+                            >
+                              {isUpdating ? (
+                                <Loader2 className="size-4 animate-spin" />
+                              ) : (
+                                <CheckCircle className="size-4" />
+                              )}
+                              Terima Pesanan
+                            </Button>
+                          )}
+
+                          {order.status === "paid" && (
+                            <p className="text-sm text-gray-500 dark:text-gray-400 italic">
+                              Menunggu konfirmasi dari UMKM...
+                            </p>
+                          )}
+
+                          {order.status === "completed" && (
+                            <p className="text-sm text-green-600 dark:text-green-400 font-medium">
+                              ✅ Pesanan selesai
+                            </p>
+                          )}
+
+                          {order.status === "cancelled" && (
+                            <p className="text-sm text-red-600 dark:text-red-400 font-medium">
+                              ❌ Pesanan dibatalkan
+                            </p>
+                          )}
                         </div>
                       </div>
-                      <div className="text-right">
-                        <p className="text-sm text-gray-600 mb-1">Total</p>
-                        <p className="font-bold text-gray-900">
-                          {formatCurrency(order.totalAmount)}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Order Items */}
-                    <div className="border-t border-gray-200 pt-4 mb-4">
-                      <div className="space-y-3">
-                        {order.items.map((item) => (
-                          <div
-                            key={item.id}
-                            className="flex items-center gap-3"
-                          >
-                            {item.image && (
-                              <img
-                                src={item.image}
-                                alt={item.name}
-                                className="w-12 h-12 object-cover rounded"
-                              />
-                            )}
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-gray-900 truncate">
-                                {item.name}
-                              </p>
-                              <p className="text-xs text-gray-500">
-                                {item.businessName}
-                              </p>
-                            </div>
-                            <div className="text-right">
-                              <p className="text-sm text-gray-900">
-                                {item.quantity}x {formatCurrency(item.price)}
-                              </p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Shipping Info */}
-                    <div className="border-t border-gray-200 pt-4 mb-4">
-                      <p className="text-sm font-medium text-gray-900 mb-2">
-                        Alamat Pengiriman
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        {order.shippingAddress.name} -{" "}
-                        {order.shippingAddress.phone}
-                        <br />
-                        {order.shippingAddress.address},{" "}
-                        {order.shippingAddress.city}{" "}
-                        {order.shippingAddress.postalCode}
-                      </p>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex gap-2">
-                      {(order.status === "processing" ||
-                        order.status === "shipped" ||
-                        order.status === "delivered") && (
-                        <Button
-                          onClick={() => handleTrackOrder(order.id)}
-                          variant="outline"
-                          className="flex-1"
-                        >
-                          <Truck className="w-4 h-4 mr-2" />
-                          {order.hasTracking ? "Lacak Pesanan" : "Lihat Status"}
-                        </Button>
-                      )}
-                      {order.status === "pending" && (
-                        <Button
-                          onClick={() => handleSkipPayment(order.id)}
-                          variant="outline"
-                          className="flex-1"
-                        >
-                          Bayar Sekarang
-                        </Button>
-                      )}
-                      {order.status === "delivered" && (
-                        <Button variant="outline" className="flex-1">
-                          Beli Lagi
-                        </Button>
-                      )}
-                    </div>
+                    )}
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
 
-          {/* Footer */}
-          <div className="border-t border-gray-200 p-6">
-            <Button onClick={onClose} variant="outline" className="w-full">
-              Tutup
-            </Button>
-          </div>
+        {/* Footer */}
+        <div className="border-t border-gray-200 dark:border-gray-700 p-4">
+          <Button onClick={onClose} variant="outline" className="w-full">
+            Tutup
+          </Button>
         </div>
       </div>
-
-      {/* Tracking Modal */}
-      {selectedOrderId && (
-        <TrackingModal
-          isOpen={isTrackingOpen}
-          onClose={() => {
-            setIsTrackingOpen(false);
-            setSelectedOrderId(null);
-          }}
-          orderId={selectedOrderId}
-        />
-      )}
-    </>
+    </div>
   );
 }

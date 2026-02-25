@@ -87,12 +87,12 @@ export function TrackingModal({
     )
       .toString()
       .padStart(2, "0")}${now
-      .getDate()
-      .toString()
-      .padStart(2, "0")}-${Math.random()
-      .toString(36)
-      .substr(2, 8)
-      .toUpperCase()}`;
+        .getDate()
+        .toString()
+        .padStart(2, "0")}-${Math.random()
+          .toString(36)
+          .substr(2, 8)
+          .toUpperCase()}`;
 
     const statuses = [
       {
@@ -377,20 +377,20 @@ export function TrackingModal({
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
               Lacak Pengiriman
             </h2>
             {trackingInfo && (
-              <p className="text-sm text-gray-600 mt-1">
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                 Order ID: {trackingInfo.orderId}
               </p>
             )}
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
           >
             <X className="w-6 h-6" />
           </button>
@@ -408,17 +408,17 @@ export function TrackingModal({
           ) : trackingInfo ? (
             <div className="space-y-6">
               {/* Tracking Number & Courier */}
-              <div className="bg-indigo-50 rounded-lg p-4">
+              <div className="bg-indigo-50 dark:bg-indigo-900/30 rounded-lg p-4">
                 <div className="flex items-center justify-between mb-3">
                   <div>
-                    <p className="text-sm text-gray-600">Nomor Resi</p>
-                    <p className="text-lg font-bold text-gray-900">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Nomor Resi</p>
+                    <p className="text-lg font-bold text-gray-900 dark:text-white">
                       {trackingInfo.trackingNumber}
                     </p>
                   </div>
                   <div className="flex items-center gap-2 px-3 py-1 bg-white dark:bg-gray-700 rounded-full">
-                    <Truck className="w-4 h-4 text-indigo-600" />
-                    <span className="text-sm font-medium text-gray-900">
+                    <Truck className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                    <span className="text-sm font-medium text-gray-900 dark:text-white">
                       {trackingInfo.courierName}
                     </span>
                   </div>
@@ -426,11 +426,11 @@ export function TrackingModal({
 
                 {/* Current Status */}
                 <div className="bg-white dark:bg-gray-700 rounded-lg p-3">
-                  <p className="text-xs text-gray-600 mb-1">Status Terkini</p>
+                  <p className="text-xs text-gray-600 dark:text-gray-400 mb-1">Status Terkini</p>
                   <p
                     className={`font-bold ${getStatusColor(
                       trackingInfo.currentStatus
-                    )}`}
+                    )} dark:text-green-400`}
                   >
                     {trackingInfo.currentStatusText}
                   </p>
@@ -438,13 +438,13 @@ export function TrackingModal({
               </div>
 
               {/* Estimated Delivery */}
-              <div className="flex items-start gap-3 p-4 bg-green-50 rounded-lg">
-                <Clock className="w-5 h-5 text-green-600 mt-0.5" />
+              <div className="flex items-start gap-3 p-4 bg-green-50 dark:bg-green-900/30 rounded-lg">
+                <Clock className="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-gray-900">
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">
                     Estimasi Tiba
                   </p>
-                  <p className="text-sm text-gray-600 mt-1">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                     {formatDate(trackingInfo.estimatedDelivery)}
                   </p>
                 </div>
@@ -452,12 +452,12 @@ export function TrackingModal({
 
               {/* Shipping Address */}
               <div className="flex items-start gap-3">
-                <MapPin className="w-5 h-5 text-gray-400 mt-0.5" />
+                <MapPin className="w-5 h-5 text-gray-400 dark:text-gray-500 mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-gray-900">
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">
                     Alamat Pengiriman
                   </p>
-                  <p className="text-sm text-gray-600 mt-1">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                     {trackingInfo.shippingAddress}
                     <br />
                     {trackingInfo.shippingCity}
@@ -466,14 +466,14 @@ export function TrackingModal({
               </div>
 
               {/* Timeline */}
-              <div className="border-t border-gray-200 pt-6">
-                <h3 className="font-bold text-gray-900 mb-4">
+              <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+                <h3 className="font-bold text-gray-900 dark:text-white mb-4">
                   Riwayat Pengiriman
                 </h3>
 
                 <div className="relative">
                   {/* Timeline Line */}
-                  <div className="absolute left-5 top-0 bottom-0 w-0.5 bg-gray-200"></div>
+                  <div className="absolute left-5 top-0 bottom-0 w-0.5 bg-gray-200 dark:bg-gray-600"></div>
 
                   {/* Timeline Items */}
                   <div className="space-y-6">
@@ -481,11 +481,10 @@ export function TrackingModal({
                       <div key={item.id} className="relative flex gap-4">
                         {/* Icon */}
                         <div
-                          className={`relative z-10 flex items-center justify-center w-10 h-10 rounded-full ${
-                            index === 0
+                          className={`relative z-10 flex items-center justify-center w-10 h-10 rounded-full ${index === 0
                               ? "bg-indigo-600 text-white"
                               : "bg-white dark:bg-gray-700 border-2 border-gray-300 dark:border-gray-600 text-gray-400 dark:text-gray-500"
-                          }`}
+                            }`}
                         >
                           {getStatusIcon(item.icon)}
                         </div>
@@ -494,24 +493,23 @@ export function TrackingModal({
                         <div className="flex-1 pb-6">
                           <div className="flex items-start justify-between mb-1">
                             <p
-                              className={`font-medium ${
-                                index === 0
-                                  ? "text-indigo-600"
-                                  : "text-gray-900"
-                              }`}
+                              className={`font-medium ${index === 0
+                                  ? "text-indigo-600 dark:text-indigo-400"
+                                  : "text-gray-900 dark:text-white"
+                                }`}
                             >
                               {item.statusText}
                             </p>
                             {index === 0 && (
-                              <span className="text-xs font-medium text-indigo-600 bg-indigo-50 px-2 py-1 rounded-full">
+                              <span className="text-xs font-medium text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/50 px-2 py-1 rounded-full">
                                 Terbaru
                               </span>
                             )}
                           </div>
-                          <p className="text-sm text-gray-600 mb-2">
+                          <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
                             {item.description}
                           </p>
-                          <div className="flex items-center gap-3 text-xs text-gray-500">
+                          <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-500">
                             <div className="flex items-center gap-1">
                               <MapPin className="w-3 h-3" />
                               {item.location}
@@ -529,14 +527,14 @@ export function TrackingModal({
               </div>
 
               {/* Courier Link */}
-              <div className="border-t border-gray-200 pt-4">
+              <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
                 <a
                   href={`https://www.${trackingInfo.courier.toLowerCase()}.co.id`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                  className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
                 >
-                  <span className="text-sm text-gray-700">
+                  <span className="text-sm text-gray-700 dark:text-gray-300">
                     Lacak di website {trackingInfo.courierName}
                   </span>
                   <ChevronRight className="w-4 h-4 text-gray-400" />
@@ -554,13 +552,13 @@ export function TrackingModal({
         </div>
 
         {/* Footer */}
-        <div className="border-t border-gray-200 p-6">
+        <div className="border-t border-gray-200 dark:border-gray-700 p-6">
           <div className="flex gap-3">
             {canAdvanceToNextStep() && trackingInfo && (
               <Button
                 onClick={handleSkipToNextStep}
                 variant="outline"
-                className="flex-1 border-indigo-600 text-indigo-600 hover:bg-indigo-50"
+                className="flex-1 border-indigo-600 text-indigo-600 hover:bg-indigo-50 dark:border-indigo-400 dark:text-indigo-400 dark:hover:bg-indigo-900/30"
               >
                 <Zap className="w-4 h-4 mr-2" />
                 Lanjut ke Step Berikutnya

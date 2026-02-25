@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
+import { API_BASE_URL } from "../config/api";
 import { motion } from "motion/react";
 import {
   X,
@@ -11,6 +12,7 @@ import {
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import { toast } from "sonner";
+
 
 interface CheckoutModalProps {
   isOpen: boolean;
@@ -148,7 +150,7 @@ export function CheckoutModal({
       if (user?.id) {
         try {
           const profileResponse = await fetch(
-            "http://localhost:8000/api/auth/profile",
+            `${API_BASE_URL}/auth/profile`,
             {
               method: "PUT",
               headers: {
@@ -175,10 +177,34 @@ export function CheckoutModal({
         }
       }
 
-      // Create order
+      // Create order via API to reduce stock
       const orderId = `order_${Date.now()}_${Math.random()
         .toString(36)
         .substr(2, 9)}`;
+
+      // Call backend API to reduce stock
+      if (user?.id && cartItems.length > 0) {
+        try {
+          for (const item of cartItems) {
+            // Reduce stock for each item
+            await fetch(`${API_BASE_URL}/products/${item.id}/reduce-stock`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-User-ID': user.id,
+              },
+              body: JSON.stringify({
+                quantity: item.quantity,
+              }),
+            });
+          }
+          console.log('Stock reduced for all items');
+        } catch (stockError) {
+          console.error('Error reducing stock:', stockError);
+          // Continue with order even if stock update fails
+        }
+      }
+
       const order = {
         id: orderId,
         userId: user?.id || "guest",
@@ -195,8 +221,8 @@ export function CheckoutModal({
           payment === "cash"
             ? "cod"
             : payment === "debit"
-            ? "bank_transfer"
-            : "e_wallet",
+              ? "bank_transfer"
+              : "e_wallet",
         status: "pending",
         notes: notes,
         createdAt: new Date().toISOString(),
@@ -222,12 +248,12 @@ export function CheckoutModal({
       )
         .toString()
         .padStart(2, "0")}${now
-        .getDate()
-        .toString()
-        .padStart(2, "0")}-${Math.random()
-        .toString(36)
-        .substr(2, 8)
-        .toUpperCase()}`;
+          .getDate()
+          .toString()
+          .padStart(2, "0")}-${Math.random()
+            .toString(36)
+            .substr(2, 8)
+            .toUpperCase()}`;
 
       const tracking = {
         trackingNumber,
@@ -462,25 +488,22 @@ export function CheckoutModal({
                     key={method.id}
                     type="button"
                     onClick={() => setSelectedPayment(method.id)}
-                    className={`p-4 border-2 rounded-lg transition-all flex flex-col items-center gap-2 ${
-                      selectedPayment === method.id
-                        ? "border-orange-600 bg-orange-50"
-                        : "border-gray-200 hover:border-gray-300"
-                    }`}
+                    className={`p-4 border-2 rounded-lg transition-all flex flex-col items-center gap-2 ${selectedPayment === method.id
+                      ? "border-orange-600 bg-orange-50"
+                      : "border-gray-200 hover:border-gray-300"
+                      }`}
                   >
                     <Icon
-                      className={`size-6 ${
-                        selectedPayment === method.id
-                          ? "text-orange-600"
-                          : "text-gray-600"
-                      }`}
+                      className={`size-6 ${selectedPayment === method.id
+                        ? "text-orange-600"
+                        : "text-gray-600"
+                        }`}
                     />
                     <span
-                      className={`text-sm ${
-                        selectedPayment === method.id
-                          ? "text-orange-600"
-                          : "text-gray-700"
-                      }`}
+                      className={`text-sm ${selectedPayment === method.id
+                        ? "text-orange-600"
+                        : "text-gray-700"
+                        }`}
                     >
                       {method.name}
                     </span>

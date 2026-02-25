@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { X, AlertCircle } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { toast } from "sonner";
+import { API_BASE_URL } from "../config/api";
 
 interface RoleUpgradeModalProps {
   isOpen: boolean;
@@ -29,17 +30,16 @@ export default function RoleUpgradeModal({
         if (!currentUser) return;
 
         const user = JSON.parse(currentUser);
-        
-        // Only check if user is umkm_owner (has already submitted UMKM)
-        // Skip for admin and customer to avoid 404 errors
-        if (user.role !== 'umkm_owner') {
+
+        // Skip for admin
+        if (user.role === 'admin') {
           setCheckingExisting(false);
           return;
         }
 
-        // Fetch existing role upgrade request for this user
+        // Check for existing role upgrade request for this user
         const response = await fetch(
-          `http://localhost:8000/api/role-upgrade/user/${user.id}`
+          `${API_BASE_URL}/role-upgrade/user/${user.id}`
         );
 
         if (response.ok) {
@@ -49,7 +49,8 @@ export default function RoleUpgradeModal({
           }
         }
       } catch (error) {
-        console.error("Error checking existing request:", error);
+        // 404 means no existing request, which is fine
+        console.log("No existing request found");
       } finally {
         setCheckingExisting(false);
       }
@@ -60,6 +61,13 @@ export default function RoleUpgradeModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Block if already approved
+    if (existingRequest && (existingRequest.status === "approved" || existingRequest.status_pengajuan === "approved")) {
+      toast.info("Permintaan Anda sudah disetujui. Silakan buat toko UMKM Anda.");
+      onClose();
+      return;
+    }
 
     if (!reason.trim()) {
       toast.error("Mohon jelaskan alasan permintaan upgrade role");
@@ -94,7 +102,7 @@ export default function RoleUpgradeModal({
         reason: reason || "Ingin menjadi UMKM Owner", // Simple reason for role upgrade
       };
 
-      const response = await fetch("http://localhost:8000/api/role-upgrade", {
+      const response = await fetch(`${API_BASE_URL}/role-upgrade`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -197,10 +205,28 @@ export default function RoleUpgradeModal({
           </div>
 
           <form onSubmit={handleSubmit} className="p-6 space-y-4">
+            {/* Info if request already approved */}
+            {!checkingExisting &&
+              existingRequest &&
+              (existingRequest.status === "approved" || existingRequest.status_pengajuan === "approved") && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex gap-3">
+                  <AlertCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                  <div className="text-sm">
+                    <p className="text-green-900 font-medium mb-1">
+                      Permintaan Anda sudah disetujui! 🎉
+                    </p>
+                    <p className="text-green-700">
+                      Anda sudah dapat membuat toko UMKM. Silakan tutup modal ini dan buat toko Anda.
+                    </p>
+                  </div>
+                </div>
+              )}
+
             {/* Warning if user already has pending/rejected request */}
             {!checkingExisting &&
               existingRequest &&
-              existingRequest.status !== "approved" && (
+              existingRequest.status !== "approved" &&
+              existingRequest.status_pengajuan !== "approved" && (
                 <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 flex gap-3">
                   <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
                   <div className="text-sm">
@@ -210,7 +236,7 @@ export default function RoleUpgradeModal({
                     <p className="text-amber-700">
                       Status saat ini:{" "}
                       <span className="font-semibold capitalize">
-                        {existingRequest.status}
+                        {existingRequest.status || existingRequest.status_pengajuan}
                       </span>
                       <br />
                       Mengajukan lagi akan menggantikan permintaan sebelumnya

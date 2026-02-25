@@ -1,63 +1,94 @@
-import { ImageWithFallback } from "./figma/ImageWithFallback";
-import {
-  Star,
-  TrendingUp,
-  Award,
-  ShoppingCart,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-import { foodStands } from "../data/stands";
-import { Product } from "../types";
-import { useCart } from "../context/CartContext";
-import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
+import { motion } from "framer-motion";
+import { useState, useEffect, useMemo } from "react";
+import { API_CONFIG } from "../config/api";
 
-interface FeaturedProduct extends Product {
+// Base URL without /api suffix for image URLs
+const BASE_URL = API_CONFIG.BASE_URL.replace('/api', '');
+
+interface SlideProduct {
+  id: string;
+  name: string;
+  image: string;
   businessName: string;
-  businessId: string;
-  badge?: "trending" | "top-rated" | "best-seller";
 }
 
-// Get top 2 products from each UMKM
-const getFeaturedItems = (): FeaturedProduct[] => {
-  const featured: FeaturedProduct[] = [];
+// Generate a seed based on current date (changes daily)
+const getDailySeed = () => {
+  const today = new Date();
+  return today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
+};
 
-  foodStands.forEach((stand) => {
-    // Sort by price (higher price = premium items) and take top 2
-    const topItems = [...stand.products]
-      .sort((a, b) => b.price - a.price)
-      .slice(0, 2)
-      .map((item, index) => ({
-        ...item,
-        businessName: stand.name,
-        businessId: stand.id,
-        badge: index === 0 ? ("top-rated" as const) : ("best-seller" as const),
-      }));
+// Seeded random shuffle function
+const seededShuffle = <T,>(array: T[], seed: number): T[] => {
+  const shuffled = [...array];
+  let currentSeed = seed;
 
-    featured.push(...topItems);
-  });
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    // Simple seeded random
+    currentSeed = (currentSeed * 9301 + 49297) % 233280;
+    const j = Math.floor((currentSeed / 233280) * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
 
-  return featured;
+  return shuffled;
 };
 
 export function FeaturedSection() {
-  const featuredItems = getFeaturedItems();
-  const { addToCart } = useCart();
+  const navigate = useNavigate();
+  const [products, setProducts] = useState<SlideProduct[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [itemsPerView, setItemsPerView] = useState(4);
+  const [itemsPerView, setItemsPerView] = useState(5);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Fetch all products from API
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setIsLoading(true);
+        const response = await fetch(`${API_CONFIG.BASE_URL}/products`);
+        const data = await response.json();
+
+        if (data.success && data.data) {
+          const allProducts: SlideProduct[] = data.data
+            .filter((p: any) => p.status === "active" && (p.stok === null || p.stok > 0))
+            .map((p: any) => ({
+              id: String(p.id),
+              name: p.nama_produk || p.nama,
+              image: p.gambar && p.gambar.trim()
+                ? (p.gambar.startsWith('http') || p.gambar.startsWith('data:')
+                  ? p.gambar
+                  : `${BASE_URL}/${p.gambar}`)
+                : "https://images.unsplash.com/photo-1557821552-17105176677c?w=400",
+              businessName: p.umkm?.nama_toko || p.nama_toko || "UMKM",
+            }));
+
+          // Shuffle with daily seed - products will be same order for the whole day
+          const shuffled = seededShuffle(allProducts, getDailySeed());
+          setProducts(shuffled);
+        }
+      } catch (error) {
+        console.error("Error fetching products for slideshow:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
 
   // Responsive items per view
   useEffect(() => {
     const updateItemsPerView = () => {
       if (window.innerWidth < 480) {
-        setItemsPerView(1);
-      } else if (window.innerWidth < 768) {
         setItemsPerView(2);
-      } else if (window.innerWidth < 1024) {
+      } else if (window.innerWidth < 768) {
         setItemsPerView(3);
-      } else {
+      } else if (window.innerWidth < 1024) {
         setItemsPerView(4);
+      } else {
+        setItemsPerView(5);
       }
     };
 
@@ -66,16 +97,18 @@ export function FeaturedSection() {
     return () => window.removeEventListener("resize", updateItemsPerView);
   }, []);
 
-  // Auto-play
+  // Auto-slide every 3 seconds
   useEffect(() => {
+    if (products.length <= itemsPerView) return;
+
     const timer = setInterval(() => {
       handleNext();
     }, 3000);
 
     return () => clearInterval(timer);
-  }, [currentIndex, itemsPerView]);
+  }, [currentIndex, itemsPerView, products.length]);
 
-  const maxIndex = Math.max(0, featuredItems.length - itemsPerView);
+  const maxIndex = Math.max(0, products.length - itemsPerView);
 
   const handleNext = () => {
     setCurrentIndex((prev) => (prev >= maxIndex ? 0 : prev + 1));
@@ -85,93 +118,72 @@ export function FeaturedSection() {
     setCurrentIndex((prev) => (prev <= 0 ? maxIndex : prev - 1));
   };
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("id-ID", {
-      style: "currency",
-      currency: "IDR",
-      minimumFractionDigits: 0,
-    }).format(price);
+  const handleProductClick = (productId: string) => {
+    navigate(`/product/${productId}`);
   };
 
-  const handleItemClick = (businessId: string) => {
-    // Find the business card and scroll to it
-    const standElement = document.querySelector(
-      `[data-stand-id=\"${businessId}\"]`
+  if (isLoading) {
+    return (
+      <section className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8 bg-gradient-to-b from-orange-50 to-white dark:from-gray-800 dark:to-gray-900">
+        <div className="flex items-center gap-3 mb-6">
+          <Sparkles className="size-8 text-orange-500" />
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            Jelajahi Produk UMKM
+          </h2>
+        </div>
+        <div className="flex gap-4 overflow-hidden">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div
+              key={i}
+              className="flex-shrink-0 w-48 h-48 bg-gray-200 dark:bg-gray-700 rounded-xl animate-pulse"
+            />
+          ))}
+        </div>
+      </section>
     );
-    if (standElement) {
-      standElement.scrollIntoView({ behavior: "smooth", block: "center" });
-      // Add highlight effect
-      standElement.classList.add("ring-4", "ring-indigo-500", "ring-offset-4");
-      setTimeout(() => {
-        standElement.classList.remove(
-          "ring-4",
-          "ring-indigo-500",
-          "ring-offset-4"
-        );
-      }, 2000);
-    }
-  };
+  }
 
-  const getBadgeConfig = (badge?: FeaturedProduct["badge"]) => {
-    switch (badge) {
-      case "trending":
-        return { icon: TrendingUp, text: "Trending", color: "bg-purple-500" };
-      case "top-rated":
-        return { icon: Award, text: "Top Rated", color: "bg-indigo-500" };
-      case "best-seller":
-        return { icon: Star, text: "Best Seller", color: "bg-blue-500" };
-      default:
-        return null;
-    }
-  };
-
-  const getCategoryLabel = (category: string) => {
-    const labels: Record<string, string> = {
-      product: "Produk",
-      food: "Kuliner",
-      accessory: "Aksesoris",
-      craft: "Kerajinan",
-    };
-    return labels[category] || "Produk";
-  };
+  if (products.length === 0) {
+    return null;
+  }
 
   return (
-    <section className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8 bg-gradient-to-b from-indigo-50 to-white dark:from-gray-800 dark:to-gray-900 transition-colors">
+    <section className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8 bg-gradient-to-b from-orange-50 to-white dark:from-gray-800 dark:to-gray-900 transition-colors">
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-2">
-          <Star className="size-8 text-indigo-600 dark:text-indigo-400 fill-indigo-600 dark:fill-indigo-400" />
-          <h2 className="text-gray-900 dark:text-gray-100">
-            Produk Pilihan Minggu Ini
+          <Sparkles className="size-8 text-orange-500 fill-orange-500" />
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            Jelajahi Produk UMKM
           </h2>
         </div>
         <p className="text-gray-600 dark:text-gray-400">
-          Produk terpopuler dari setiap UMKM lokal
+          Temukan berbagai produk menarik dari UMKM lokal
         </p>
       </div>
 
       <div className="relative">
         {/* Navigation Buttons */}
-        {featuredItems.length > itemsPerView && (
+        {products.length > itemsPerView && (
           <>
             <button
               onClick={handlePrev}
-              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 bg-white dark:bg-gray-700 rounded-full p-2 shadow-lg hover:bg-indigo-50 dark:hover:bg-gray-600 transition-colors hidden sm:block"
+              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 z-10 bg-white dark:bg-gray-700 rounded-full p-2 shadow-lg hover:bg-orange-50 dark:hover:bg-gray-600 transition-colors hidden sm:block"
             >
-              <ChevronLeft className="size-6 text-indigo-600 dark:text-indigo-400" />
+              <ChevronLeft className="size-6 text-orange-500" />
             </button>
             <button
               onClick={handleNext}
-              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 bg-white dark:bg-gray-700 rounded-full p-2 shadow-lg hover:bg-indigo-50 dark:hover:bg-gray-600 transition-colors hidden sm:block"
+              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 z-10 bg-white dark:bg-gray-700 rounded-full p-2 shadow-lg hover:bg-orange-50 dark:hover:bg-gray-600 transition-colors hidden sm:block"
             >
-              <ChevronRight className="size-6 text-indigo-600 dark:text-indigo-400" />
+              <ChevronRight className="size-6 text-orange-500" />
             </button>
           </>
         )}
 
         {/* Carousel Container */}
-        <div className="overflow-hidden">
+        <div className="overflow-hidden rounded-xl">
           <motion.div
-            className="flex gap-4"
+            className="flex gap-3"
             animate={{
               x: `-${currentIndex * (100 / itemsPerView)}%`,
             }}
@@ -181,101 +193,57 @@ export function FeaturedSection() {
               damping: 30,
             }}
           >
-            {featuredItems.map((item) => {
-              const badgeConfig = getBadgeConfig(item.badge);
-
-              return (
-                <motion.div
-                  key={item.id}
-                  className="flex-shrink-0"
-                  style={{
-                    width: `calc(${100 / itemsPerView}% - ${
-                      ((itemsPerView - 1) * 16) / itemsPerView
-                    }px)`,
-                  }}
+            {products.map((product) => (
+              <motion.div
+                key={product.id}
+                className="flex-shrink-0"
+                style={{
+                  width: `calc(${100 / itemsPerView}% - ${((itemsPerView - 1) * 12) / itemsPerView}px)`,
+                }}
+                whileHover={{ scale: 1.05, zIndex: 10 }}
+                transition={{ type: "spring", stiffness: 400, damping: 25 }}
+              >
+                <div
+                  onClick={() => handleProductClick(product.id)}
+                  className="group cursor-pointer"
                 >
-                  <div className="group cursor-pointer h-full">
-                    <div
-                      onClick={() => handleItemClick(item.businessId)}
-                      className="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 h-full flex flex-col"
-                    >
-                      {/* Image */}
-                      <div className="relative h-48 overflow-hidden">
-                        <ImageWithFallback
-                          src={item.image || ""}
-                          alt={item.name}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-
-                        {/* Badge */}
-                        {badgeConfig && (
-                          <div
-                            className={`absolute top-3 left-3 ${badgeConfig.color} text-white px-3 py-1 rounded-full text-xs flex items-center gap-1`}
-                          >
-                            <badgeConfig.icon className="size-3" />
-                            <span>{badgeConfig.text}</span>
-                          </div>
-                        )}
-
-                        {/* Quick Add to Cart */}
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            addToCart(item, item.businessName, item.businessId);
-                          }}
-                          className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
-                        >
-                          <div className="bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 rounded-full p-3 hover:bg-indigo-600 hover:text-white transition-colors">
-                            <ShoppingCart className="size-5" />
-                          </div>
-                        </button>
-                      </div>
-
-                      {/* Content */}
-                      <div className="p-4 flex-1 flex flex-col">
-                        <h4 className="mb-1 line-clamp-1 text-gray-900 dark:text-gray-100">
-                          {item.name}
-                        </h4>
-                        <p className="text-gray-600 dark:text-gray-400 text-sm mb-2 line-clamp-2 flex-1">
-                          {item.description}
-                        </p>
-
-                        {/* Business Name */}
-                        <div className="text-xs text-gray-500 dark:text-gray-400 mb-3 flex items-center gap-1">
-                          <span className="truncate">{item.businessName}</span>
-                        </div>
-
-                        {/* Price and Category */}
-                        <div className="flex items-center justify-between">
-                          <div className="text-indigo-600 dark:text-indigo-400">
-                            {formatPrice(item.price)}
-                          </div>
-                          <div className="text-xs bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-300 px-2 py-1 rounded">
-                            {getCategoryLabel(item.category)}
-                          </div>
-                        </div>
-                      </div>
+                  <div className="relative aspect-square rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300">
+                    <img
+                      src={product.image}
+                      alt={product.name}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                      onError={(e) => {
+                        e.currentTarget.src = "https://images.unsplash.com/photo-1557821552-17105176677c?w=400";
+                      }}
+                    />
+                    {/* Gradient overlay with name */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    <div className="absolute bottom-0 left-0 right-0 p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+                      <p className="text-white text-sm font-medium line-clamp-2 drop-shadow-lg">
+                        {product.name}
+                      </p>
+                      <p className="text-white/80 text-xs mt-1 line-clamp-1">
+                        {product.businessName}
+                      </p>
                     </div>
                   </div>
-                </motion.div>
-              );
-            })}
+                </div>
+              </motion.div>
+            ))}
           </motion.div>
         </div>
 
         {/* Dots Indicator */}
-        {featuredItems.length > itemsPerView && (
-          <div className="flex justify-center gap-2 mt-6">
-            {Array.from({ length: maxIndex + 1 }).map((_, index) => (
+        {products.length > itemsPerView && (
+          <div className="flex justify-center gap-1.5 mt-4">
+            {Array.from({ length: Math.min(maxIndex + 1, 10) }).map((_, index) => (
               <button
                 key={index}
                 onClick={() => setCurrentIndex(index)}
-                className={`w-2 h-2 rounded-full transition-all ${
-                  currentIndex === index
-                    ? "bg-indigo-600 dark:bg-indigo-400 w-8"
-                    : "bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500"
-                }`}
+                className={`h-1.5 rounded-full transition-all ${currentIndex === index
+                  ? "bg-orange-500 w-6"
+                  : "bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500 w-1.5"
+                  }`}
               />
             ))}
           </div>

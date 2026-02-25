@@ -31,11 +31,11 @@ export function WhatsAppOtpModal({
 
   if (!isOpen) return null;
 
-  // Format nomor WhatsApp (tambah 62 jika mulai dengan 0)
+  // Format nomor WhatsApp (user inputs without leading 0, we add 62)
   const formatPhoneNumber = (phone: string) => {
     let formatted = phone.replace(/\D/g, ""); // Hapus non-digit
 
-    // Jika mulai dengan 0, ganti dengan 62
+    // Jika mulai dengan 0, hapus 0 dan tambah 62
     if (formatted.startsWith("0")) {
       formatted = "62" + formatted.substring(1);
     }
@@ -43,7 +43,7 @@ export function WhatsAppOtpModal({
     else if (formatted.startsWith("62")) {
       // Already correct format
     }
-    // Jika mulai dengan angka lain (bukan 0 atau 62), tambah 62 di depan
+    // Jika mulai dengan angka lain (misal 8xx), tambah 62 di depan
     else if (formatted.length > 0) {
       formatted = "62" + formatted;
     }
@@ -73,7 +73,7 @@ export function WhatsAppOtpModal({
       const endpoint =
         type === "user"
           ? "/auth/send-otp-register"
-          : "/businesses/send-otp-register";
+          : "/auth/send-otp-register"; // Both use same endpoint
 
       const apiUrl = `${API_CONFIG.BASE_URL}${endpoint}`;
       console.log("Calling API:", apiUrl);

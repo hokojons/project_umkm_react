@@ -1,7 +1,5 @@
 import React, { useState } from "react";
-
-const ERROR_IMG_SRC =
-  "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODgiIGhlaWdodD0iODgiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgc3Ryb2tlPSIjMDAwIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBvcGFjaXR5PSIuMyIgZmlsbD0ibm9uZSIgc3Ryb2tlLXdpZHRoPSIzLjciPjxyZWN0IHg9IjE2IiB5PSIxNiIgd2lkdGg9IjU2IiBoZWlnaHQ9IjU2IiByeD0iNiIvPjxwYXRoIGQ9Im0xNiA1OCAxNi0xOCAzMiAzMiIvPjxjaXJjbGUgY3g9IjUzIiBjeT0iMzUiIHI9IjciLz48L3N2Zz4KCg==";
+import { Package } from "lucide-react";
 
 export function ImageWithFallback(
   props: React.ImgHTMLAttributes<HTMLImageElement>
@@ -14,25 +12,23 @@ export function ImageWithFallback(
 
   const { src, alt, style, className, ...rest } = props;
 
-  return didError ? (
-    <div
-      className={`inline-block bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-600 w-full h-full text-center align-middle ${
-        className ?? ""
-      }`}
-      style={style}
-    >
-      <div className="flex items-center justify-center w-full h-full">
-        <div className="text-white text-center">
-          <p className="text-xl font-semibold mb-2">Gallery Showcase</p>
-          <p className="text-sm opacity-80">{alt || "Image"}</p>
-        </div>
+  // When error occurs, show a simple package icon placeholder with same size
+  if (didError) {
+    return (
+      <div
+        className={`flex-shrink-0 bg-gray-100 dark:bg-gray-700 flex items-center justify-center ${className ?? ""}`}
+        style={style}
+      >
+        <Package className="w-1/2 h-1/2 text-gray-400" />
       </div>
-    </div>
-  ) : (
+    );
+  }
+
+  return (
     <img
       src={src}
       alt={alt}
-      className={className}
+      className={`flex-shrink-0 ${className ?? ""}`}
       style={style}
       {...rest}
       onError={handleError}

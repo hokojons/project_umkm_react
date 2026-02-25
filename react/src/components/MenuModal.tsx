@@ -132,54 +132,54 @@ export function MenuModal({ stand, onClose }: MenuModalProps) {
             stand.phone ||
             stand.email ||
             stand.instagram) && (
-            <div className="mb-6 bg-green-50 dark:bg-green-900/20 rounded-lg p-4 border border-green-200 dark:border-green-800">
-              <h3 className="mb-3 text-green-900 dark:text-green-100">
-                Hubungi Penjual
-              </h3>
-              <div className="flex flex-wrap gap-2">
-                {stand.whatsapp && (
-                  <a
-                    href={`https://wa.me/${stand.whatsapp}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors"
-                  >
-                    <MessageCircle className="size-4" />
-                    <span className="text-sm">WhatsApp</span>
-                  </a>
-                )}
-                {stand.phone && (
-                  <a
-                    href={`tel:${stand.phone}`}
-                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
-                  >
-                    <Phone className="size-4" />
-                    <span className="text-sm">Telepon</span>
-                  </a>
-                )}
-                {stand.email && (
-                  <a
-                    href={`mailto:${stand.email}`}
-                    className="flex items-center gap-2 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors"
-                  >
-                    <Mail className="size-4" />
-                    <span className="text-sm">Email</span>
-                  </a>
-                )}
-                {stand.instagram && (
-                  <a
-                    href={`https://instagram.com/${stand.instagram}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-4 py-2 rounded-lg transition-colors"
-                  >
-                    <Instagram className="size-4" />
-                    <span className="text-sm">Instagram</span>
-                  </a>
-                )}
+              <div className="mb-6 bg-green-50 dark:bg-green-900/20 rounded-lg p-4 border border-green-200 dark:border-green-800">
+                <h3 className="mb-3 text-green-900 dark:text-green-100">
+                  Hubungi Penjual
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {stand.whatsapp && (
+                    <a
+                      href={`https://wa.me/${stand.whatsapp}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors"
+                    >
+                      <MessageCircle className="size-4" />
+                      <span className="text-sm">WhatsApp</span>
+                    </a>
+                  )}
+                  {stand.phone && (
+                    <a
+                      href={`tel:${stand.phone}`}
+                      className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+                    >
+                      <Phone className="size-4" />
+                      <span className="text-sm">Telepon</span>
+                    </a>
+                  )}
+                  {stand.email && (
+                    <a
+                      href={`mailto:${stand.email}`}
+                      className="flex items-center gap-2 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors"
+                    >
+                      <Mail className="size-4" />
+                      <span className="text-sm">Email</span>
+                    </a>
+                  )}
+                  {stand.instagram && (
+                    <a
+                      href={`https://instagram.com/${stand.instagram}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-4 py-2 rounded-lg transition-colors"
+                    >
+                      <Instagram className="size-4" />
+                      <span className="text-sm">Instagram</span>
+                    </a>
+                  )}
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
           {/* About Me Section */}
           {stand.about && (
@@ -219,7 +219,7 @@ export function MenuModal({ stand, onClose }: MenuModalProps) {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        addToCart(item, stand.name, stand.id);
+                        addToCart(item, stand.name, stand.id, stand.whatsapp);
                       }}
                       className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
                     >
@@ -250,7 +250,7 @@ export function MenuModal({ stand, onClose }: MenuModalProps) {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      addToCart(item, stand.name, stand.id);
+                      addToCart(item, stand.name, stand.id, stand.whatsapp);
                     }}
                     className="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2"
                   >
@@ -274,16 +274,24 @@ export function MenuModal({ stand, onClose }: MenuModalProps) {
             name: selectedProduct.name,
             price: selectedProduct.price,
             image: selectedProduct.image || "",
+            images: selectedProduct.images,
+            all_images: selectedProduct.all_images,
             description: selectedProduct.description,
+            stock: selectedProduct.stock,
+            variant_types: selectedProduct.variant_types,
             seller: {
               name: stand.name,
               whatsapp: stand.whatsapp,
               instagram: stand.instagram,
             },
           }}
-          onAddToCart={(productId, quantity) => {
+          onAddToCart={(productId, quantity, selectedVariants) => {
+            const productWithVariants = {
+              ...selectedProduct,
+              selectedVariants,
+            };
             for (let i = 0; i < quantity; i++) {
-              addToCart(selectedProduct, stand.name, stand.id);
+              addToCart(productWithVariants, stand.name, stand.id, stand.whatsapp);
             }
             setSelectedProduct(null);
           }}

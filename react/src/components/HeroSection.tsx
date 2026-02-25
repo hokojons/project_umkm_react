@@ -1,5 +1,6 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useState, useEffect } from "react";
+import { API_BASE_URL, BASE_HOST } from "../config/api";
 
 interface HeroSectionProps {
   onExplore: () => void;
@@ -31,12 +32,12 @@ export function HeroSection({
   useEffect(() => {
     const loadEvents = async () => {
       try {
-        const response = await fetch('http://localhost:8000/api/events');
+        const response = await fetch(`${API_BASE_URL}/events`);
         const data = await response.json();
-        
+
         if (data.success && Array.isArray(data.data)) {
           console.log("📅 Loading events for hero:", data.data);
-          
+
           // Filter upcoming/ongoing events and map to slides
           const eventSlides: Slide[] = data.data
             .filter((evt: any) => {
@@ -47,23 +48,23 @@ export function HeroSection({
             .map((evt: any, index: number) => {
               console.log(`Event "${evt.name}" image:`, evt.image);
               console.log(`Event "${evt.name}" position:`, evt.gambar_position_x, evt.gambar_position_y, 'scale:', evt.gambar_scale);
-              
+
               // Determine badge
               const eventDate = new Date(evt.date);
               const today = new Date();
               const diffDays = Math.floor((eventDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
               const badge = diffDays <= 7 ? "BERLANGSUNG" : "AKAN DATANG";
-              
+
               // Handle image URL - check if external or local path
               let imageUrl = "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=1920&q=80";
               if (evt.image) {
                 if (evt.image.startsWith('http://') || evt.image.startsWith('https://')) {
                   imageUrl = evt.image;
                 } else {
-                  imageUrl = `http://localhost:8000/${evt.image}`;
+                  imageUrl = `${BASE_HOST}/${evt.image}`;
                 }
               }
-              
+
               return {
                 id: index + 1,
                 eventId: evt.id,
@@ -76,7 +77,7 @@ export function HeroSection({
                 scale: evt.gambar_scale || 1,
               };
             });
-          
+
           // If no events, use default slides
           if (eventSlides.length === 0) {
             setSlides([
@@ -134,7 +135,7 @@ export function HeroSection({
         ]);
       }
     };
-    
+
     loadEvents();
   }, []);
 
@@ -171,9 +172,8 @@ export function HeroSection({
         {slides.map((slide, index) => (
           <div
             key={slide.id}
-            className={`absolute inset-0 transition-opacity duration-1000 ${
-              index === currentSlide ? "opacity-100" : "opacity-0"
-            }`}
+            className={`absolute inset-0 transition-opacity duration-1000 ${index === currentSlide ? "opacity-100" : "opacity-0"
+              }`}
           >
             <div className="w-full h-full overflow-hidden relative">
               <img
@@ -245,11 +245,10 @@ export function HeroSection({
                 e.stopPropagation();
                 setCurrentSlide(index);
               }}
-              className={`h-2 rounded-full transition-all shadow-lg ${
-                index === currentSlide
+              className={`h-2 rounded-full transition-all shadow-lg ${index === currentSlide
                   ? "bg-white w-8"
                   : "bg-white/50 hover:bg-white/75 w-2"
-              }`}
+                }`}
             />
           ))}
         </div>

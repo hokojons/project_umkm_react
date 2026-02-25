@@ -2,6 +2,16 @@ import { useState, useEffect } from "react";
 import { Gift, ShoppingCart, Sparkles } from "lucide-react";
 import { useCart } from "../context/CartContext";
 import { toast } from "sonner";
+import ImageCarousel from "./ImageCarousel";
+import { API_BASE_URL, BASE_HOST } from "../config/api";
+
+interface PackageItem {
+  id?: number;
+  nama?: string;
+  harga?: number;
+  gambar?: string;
+  qty?: number;
+}
 
 interface GiftPackage {
   id: string;
@@ -10,9 +20,39 @@ interface GiftPackage {
   price: number;
   category: string;
   image: string;
-  items: string[];
+  images?: string[];
+  items: (string | PackageItem)[];
   createdAt: string;
+  tanggal_mulai?: string | null;
+  tanggal_akhir?: string | null;
+  umkm?: {
+    id: number;
+    nama_toko: string;
+    nama_pemilik: string;
+  } | null;
 }
+
+// Helper function to get item display name
+const getItemName = (item: string | PackageItem): string => {
+  if (typeof item === 'string') return item;
+  return item.nama || 'Item';
+};
+
+// Helper function to format date
+const formatDate = (dateString: string | null | undefined): string => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+};
+
+// Helper to check if package is expiring soon (within 3 days)
+const isExpiringSoon = (tanggal_akhir: string | null | undefined): boolean => {
+  if (!tanggal_akhir) return false;
+  const endDate = new Date(tanggal_akhir);
+  const now = new Date();
+  const diffDays = Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+  return diffDays >= 0 && diffDays <= 3;
+};
 
 export function SpecialPackagesSection() {
   const [packages, setPackages] = useState<GiftPackage[]>([]);
@@ -27,9 +67,9 @@ export function SpecialPackagesSection() {
 
   const loadPackages = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/gift-packages');
+      const response = await fetch(`${API_BASE_URL}/gift-packages`);
       const data = await response.json();
-      
+
       if (data.success && Array.isArray(data.data)) {
         setPackages(data.data);
       } else {
@@ -45,9 +85,11 @@ export function SpecialPackagesSection() {
     // Convert image to full URL
     let imageUrl = pkg.image;
     if (pkg.image && !(pkg.image.startsWith('http://') || pkg.image.startsWith('https://'))) {
-      imageUrl = `http://localhost:8000/${pkg.image}`;
+      imageUrl = `${BASE_HOST}/${pkg.image}`;
     }
-    
+
+    // addToCart already handles toast notifications internally
+    // Pass available: true so it passes the stock check
     addToCart({
       id: pkg.id,
       name: pkg.name,
@@ -55,8 +97,8 @@ export function SpecialPackagesSection() {
       image: imageUrl,
       standName: "🎁 Paket Spesial",
       standId: "special_packages",
-    });
-    toast.success(`${pkg.name} ditambahkan ke keranjang!`);
+      available: true,
+    }, "🎁 Paket Spesial", "special_packages");
   };
 
   const formatCurrency = (amount: number) => {
@@ -74,7 +116,7 @@ export function SpecialPackagesSection() {
 
   return (
     <>
-      <section className="bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 dark:from-indigo-950 dark:via-purple-950 dark:to-pink-950 py-16 transition-colors">
+      <section className="bg-white dark:bg-gray-900 py-16 transition-colors">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="text-center mb-12">
@@ -101,29 +143,71 @@ export function SpecialPackagesSection() {
               >
                 {/* Image */}
                 <div className="relative h-48 overflow-hidden">
-                  <img
-                    src={pkg.image && (pkg.image.startsWith('http://') || pkg.image.startsWith('https://')) 
-                      ? pkg.image 
-                      : pkg.image 
-                        ? `http://localhost:8000/${pkg.image}` 
-                        : '/api/placeholder/400/300'}
-                    alt={pkg.name}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                  />
-                  <div className="absolute top-3 right-3">
+                  {pkg.images && pkg.images.length > 1 ? (
+                    <ImageCarousel
+                      images={pkg.images}
+                      aspectRatio="auto"
+                      showDots={true}
+                      showArrows={true}
+                      className="h-48"
+                    />
+                  ) : (
+                    <img
+                      src={pkg.image && (pkg.image.startsWith('http://') || pkg.image.startsWith('https://'))
+                        ? pkg.image
+                        : pkg.image
+                          ? `${BASE_HOST}/${pkg.image}`
+                          : '/api/placeholder/400/300'}
+                      alt={pkg.name}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                    />
+                  )}
+                  <div className="absolute top-3 right-3 z-10">
                     <span className="px-3 py-1 bg-indigo-600 text-white text-xs rounded-full shadow-lg flex items-center gap-1">
                       <Gift className="size-3" />
                       {pkg.category}
                     </span>
                   </div>
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
                 </div>
 
                 {/* Content */}
                 <div className="p-5">
-                  <h3 className="text-gray-900 dark:text-gray-100 mb-2 line-clamp-1">
+                  <h3 className="text-gray-900 dark:text-gray-100 mb-1 line-clamp-1">
                     {pkg.name}
                   </h3>
+                  {/* UMKM Owner Info */}
+                  <p className="text-xs text-indigo-600 dark:text-indigo-400 mb-2 flex items-center gap-1">
+                    {pkg.umkm ? (
+                      <>
+                        <span>🏪</span>
+                        <span className="truncate">{pkg.umkm.nama_toko}</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>🏛️</span>
+                        <span>Paket Resmi Gereja</span>
+                      </>
+                    )}
+                  </p>
+                  {/* Validity Period */}
+                  {(pkg.tanggal_mulai || pkg.tanggal_akhir) && (
+                    <div className={`text-xs mb-2 flex items-center gap-1 ${isExpiringSoon(pkg.tanggal_akhir) ? 'text-red-600 dark:text-red-400 font-medium' : 'text-gray-500 dark:text-gray-400'}`}>
+                      <span>📅</span>
+                      <span>
+                        {pkg.tanggal_mulai && pkg.tanggal_akhir
+                          ? `${formatDate(pkg.tanggal_mulai)} - ${formatDate(pkg.tanggal_akhir)}`
+                          : pkg.tanggal_akhir
+                            ? `s/d ${formatDate(pkg.tanggal_akhir)}`
+                            : `Mulai ${formatDate(pkg.tanggal_mulai)}`}
+                      </span>
+                      {isExpiringSoon(pkg.tanggal_akhir) && (
+                        <span className="ml-1 px-1.5 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded text-[10px] uppercase font-bold">
+                          Segera Berakhir!
+                        </span>
+                      )}
+                    </div>
+                  )}
                   <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2 min-h-[40px]">
                     {pkg.description}
                   </p>
@@ -144,7 +228,7 @@ export function SpecialPackagesSection() {
                               <span className="text-indigo-600 dark:text-indigo-400 mt-0.5">
                                 ✓
                               </span>
-                              <span className="line-clamp-1">{item}</span>
+                              <span className="line-clamp-1">{getItemName(item)}</span>
                             </p>
                           ))}
                           {pkg.items.length > 2 && (
@@ -196,16 +280,26 @@ export function SpecialPackagesSection() {
           >
             {/* Image */}
             <div className="relative h-64 md:h-80">
-              <img
-                src={selectedPackage.image && (selectedPackage.image.startsWith('http://') || selectedPackage.image.startsWith('https://')) 
-                  ? selectedPackage.image 
-                  : selectedPackage.image 
-                    ? `http://localhost:8000/${selectedPackage.image}` 
-                    : '/api/placeholder/400/300'}
-                alt={selectedPackage.name}
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute top-4 right-4">
+              {selectedPackage.images && selectedPackage.images.length > 1 ? (
+                <ImageCarousel
+                  images={selectedPackage.images}
+                  aspectRatio="auto"
+                  showDots={true}
+                  showArrows={true}
+                  className="h-64 md:h-80"
+                />
+              ) : (
+                <img
+                  src={selectedPackage.image && (selectedPackage.image.startsWith('http://') || selectedPackage.image.startsWith('https://'))
+                    ? selectedPackage.image
+                    : selectedPackage.image
+                      ? `${BASE_HOST}/${selectedPackage.image}`
+                      : '/api/placeholder/400/300'}
+                  alt={selectedPackage.name}
+                  className="w-full h-full object-cover"
+                />
+              )}
+              <div className="absolute top-4 right-4 z-10">
                 <span className="px-4 py-2 bg-indigo-600 text-white text-sm rounded-full shadow-lg flex items-center gap-2">
                   <Gift className="size-4" />
                   {selectedPackage.category}
@@ -238,7 +332,7 @@ export function SpecialPackagesSection() {
                           {idx + 1}
                         </div>
                         <p className="text-gray-700 dark:text-gray-300 flex-1">
-                          {item}
+                          {getItemName(item)}
                         </p>
                       </div>
                     ))
