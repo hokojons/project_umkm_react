@@ -253,34 +253,34 @@ export function OrderHistoryPage() {
         <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 pt-16">
             <div className="max-w-6xl mx-auto px-4 py-4 md:py-8">
                 {/* Header */}
-                <div className="flex items-center gap-3 md:gap-4 mb-4 md:mb-8">
-                    <Button
-                        onClick={() => navigate(-1)}
-                        variant="outline"
-                        size="sm"
-                        className="flex items-center gap-2 dark:border-gray-500 dark:text-gray-200 dark:hover:bg-gray-700"
-                    >
-                        <ArrowLeft className="w-4 h-4" />
-                        Kembali
-                    </Button>
-                    <div className="flex-1">
-                        <h1 className="text-xl md:text-3xl font-bold text-gray-900 dark:text-white">
-                            Riwayat Pesanan
-                        </h1>
-                        <p className="text-sm md:text-base text-gray-600 dark:text-gray-400">
-                            Lihat semua pesanan Anda
-                        </p>
+                <div className="mb-4 md:mb-6">
+                    <div className="flex items-center justify-between mb-2">
+                        <Button
+                            onClick={() => navigate(-1)}
+                            variant="outline"
+                            size="sm"
+                            className="flex items-center gap-2 dark:border-gray-500 dark:text-gray-200 dark:hover:bg-gray-700"
+                        >
+                            <ArrowLeft className="w-4 h-4" />
+                            Kembali
+                        </Button>
+                        <Button
+                            onClick={() => loadOrders()}
+                            variant="outline"
+                            size="sm"
+                            disabled={loading}
+                            className="flex items-center gap-2 dark:border-gray-500 dark:text-gray-200 dark:hover:bg-gray-700"
+                        >
+                            <RefreshCw className={`size-4 ${loading ? 'animate-spin' : ''}`} />
+                            Refresh
+                        </Button>
                     </div>
-                    <Button
-                        onClick={() => loadOrders()}
-                        variant="outline"
-                        size="sm"
-                        disabled={loading}
-                        className="flex items-center gap-2"
-                    >
-                        <RefreshCw className={`size-4 ${loading ? 'animate-spin' : ''}`} />
-                        Refresh
-                    </Button>
+                    <h1 className="text-xl md:text-3xl font-bold text-gray-900 dark:text-white">
+                        Riwayat Pesanan
+                    </h1>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                        Lihat semua pesanan Anda
+                    </p>
                 </div>
 
                 {/* Filter Tabs */}
@@ -296,9 +296,9 @@ export function OrderHistoryPage() {
                         <button
                             key={tab.key}
                             onClick={() => setFilter(tab.key as typeof filter)}
-                            className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${filter === tab.key
+                            className={`px-3 md:px-4 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-medium transition-all ${filter === tab.key
                                 ? "bg-purple-600 text-white shadow-lg"
-                                : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-purple-50 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-600"
+                                : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-purple-50 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-500"
                                 }`}
                         >
                             {tab.label}
@@ -340,7 +340,7 @@ export function OrderHistoryPage() {
                             return (
                                 <div
                                     key={order.id}
-                                    className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden bg-white dark:bg-gray-800 shadow-sm"
+                                    className="border border-gray-200 dark:border-gray-600 rounded-xl overflow-hidden bg-white dark:bg-gray-800/90 shadow-sm hover:shadow-md transition-shadow"
                                 >
                                     {/* Order Header */}
                                     <div
@@ -351,7 +351,7 @@ export function OrderHistoryPage() {
                                             <div className="flex-1">
                                                 {/* Order Number */}
                                                 <div className="flex items-center gap-2 mb-1">
-                                                    <span className="text-xs font-mono bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded">
+                                                    <span className="text-xs font-mono bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-0.5 rounded">
                                                         {order.order_number || `#${order.id.slice(-8)}`}
                                                     </span>
                                                     <button
@@ -559,7 +559,7 @@ export function OrderHistoryPage() {
                                                     onClick={(e) => { e.stopPropagation(); handleResendWhatsApp(order); }}
                                                     variant="outline"
                                                     size="sm"
-                                                    className="flex items-center gap-2"
+                                                    className="flex items-center gap-2 border-green-500 text-green-600 hover:bg-green-50 dark:border-green-400 dark:text-green-400 dark:hover:bg-green-900/30"
                                                 >
                                                     <MessageCircle className="size-4" />
                                                     Chat WhatsApp
@@ -572,7 +572,7 @@ export function OrderHistoryPage() {
                                                             onClick={(e) => { e.stopPropagation(); handleUpdateStatus(order.id, "paid"); }}
                                                             disabled={isUpdating}
                                                             size="sm"
-                                                            className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white"
+                                                            className="flex items-center gap-2 !bg-green-500 hover:!bg-green-600 !text-white border-0 shadow-md"
                                                         >
                                                             {isUpdating ? (
                                                                 <Loader2 className="size-4 animate-spin" />
@@ -586,7 +586,7 @@ export function OrderHistoryPage() {
                                                             disabled={isUpdating}
                                                             variant="outline"
                                                             size="sm"
-                                                            className="flex items-center gap-2 text-red-600 border-red-300 hover:bg-red-50"
+                                                            className="flex items-center gap-2 !text-red-500 !border-red-400 hover:!bg-red-50 dark:hover:!bg-red-900/30"
                                                         >
                                                             <XCircle className="size-4" />
                                                             Batalkan
@@ -600,7 +600,7 @@ export function OrderHistoryPage() {
                                                             onClick={(e) => { e.stopPropagation(); handleUpdateStatus(order.id, "completed"); }}
                                                             disabled={isUpdating}
                                                             size="sm"
-                                                            className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white"
+                                                            className="flex items-center gap-2 !bg-green-500 hover:!bg-green-600 !text-white border-0 shadow-md"
                                                         >
                                                             {isUpdating ? (
                                                                 <Loader2 className="size-4 animate-spin" />
