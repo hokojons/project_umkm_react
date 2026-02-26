@@ -890,27 +890,27 @@ export function UMKMDashboard({
                         </div>
 
                         {/* Action Buttons */}
-                        <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 pt-4 border-t border-gray-200 dark:border-gray-600">
+                        <div className="flex flex-row justify-end gap-2 pt-3 sm:pt-4 border-t border-gray-200 dark:border-gray-600">
                           {editingBusiness?.id === business.id ? (
                             <>
                               <button
                                 onClick={() => setEditingBusiness(null)}
-                                className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg transition-colors"
+                                className="px-3 sm:px-4 py-1.5 sm:py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg transition-colors text-xs sm:text-sm"
                               >
                                 Batal
                               </button>
                               <button
                                 onClick={handleUpdateBusiness}
                                 disabled={isUploading}
-                                className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2 disabled:opacity-50"
+                                className="px-4 sm:px-6 py-1.5 sm:py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-1.5 disabled:opacity-50 text-xs sm:text-sm"
                               >
                                 {isUploading ? (
                                   <>
-                                    <Loader className="size-4 animate-spin" />
+                                    <Loader className="size-3.5 sm:size-4 animate-spin" />
                                     Menyimpan...
                                   </>
                                 ) : (
-                                  "Simpan Perubahan"
+                                  "Simpan"
                                 )}
                               </button>
                             </>
@@ -918,16 +918,16 @@ export function UMKMDashboard({
                             <>
                               <button
                                 onClick={() => setEditingBusiness(business)}
-                                className="px-4 py-2 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors flex items-center gap-2"
+                                className="px-3 sm:px-4 py-1.5 sm:py-2 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors flex items-center gap-1.5 text-xs sm:text-sm"
                               >
-                                <Edit className="size-4" />
-                                Edit Toko
+                                <Edit className="size-3.5 sm:size-4" />
+                                Edit
                               </button>
                               <button
                                 onClick={() => handleDeleteBusiness(business.id)}
-                                className="px-4 py-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors flex items-center gap-2"
+                                className="px-3 sm:px-4 py-1.5 sm:py-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors flex items-center gap-1.5 text-xs sm:text-sm"
                               >
-                                <Trash2 className="size-4" />
+                                <Trash2 className="size-3.5 sm:size-4" />
                                 Hapus
                               </button>
                             </>
@@ -1012,54 +1012,54 @@ export function UMKMDashboard({
                             </div>
 
                             {/* Status Badge */}
-                            <div className="flex items-center gap-2 mb-3 flex-wrap">
-                              <span className="px-2 py-1 bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 text-xs rounded">
+                            <div className="flex items-center gap-1 sm:gap-2 mb-2 sm:mb-3 flex-wrap">
+                              <span className="px-1.5 sm:px-2 py-0.5 sm:py-1 bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 text-[10px] sm:text-xs rounded">
                                 {product.category}
                               </span>
                               {product.status === 'pending' && (
-                                <span className="px-2 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 text-xs rounded flex items-center gap-1">
-                                  <Clock className="size-3" />
+                                <span className="px-1.5 sm:px-2 py-0.5 sm:py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 text-[10px] sm:text-xs rounded flex items-center gap-0.5">
+                                  <Clock className="size-2.5 sm:size-3" />
                                   Menunggu
                                 </span>
                               )}
                               {product.status === 'active' && (
-                                <span className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs rounded flex items-center gap-1">
-                                  <CheckCircle className="size-3" />
+                                <span className="px-1.5 sm:px-2 py-0.5 sm:py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-[10px] sm:text-xs rounded flex items-center gap-0.5">
+                                  <CheckCircle className="size-2.5 sm:size-3" />
                                   Aktif
                                 </span>
                               )}
                               {(product.status === 'rejected' || product.status === 'inactive') && (
-                                <span className="px-2 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-xs rounded flex items-center gap-1">
-                                  <XCircle className="size-3" />
+                                <span className="px-1.5 sm:px-2 py-0.5 sm:py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-[10px] sm:text-xs rounded flex items-center gap-0.5">
+                                  <XCircle className="size-2.5 sm:size-3" />
                                   Ditolak
                                 </span>
                               )}
                             </div>
 
                             {/* Action Buttons */}
-                            <div className="flex gap-2 pt-3 border-t border-gray-200 dark:border-gray-600">
+                            <div className="flex gap-1.5 sm:gap-2 pt-2 sm:pt-3 border-t border-gray-200 dark:border-gray-600">
                               {(product.status === 'rejected' || product.status === 'inactive') ? (
                                 <button
                                   onClick={() => setEditingProduct(product)}
-                                  className="flex-1 px-3 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-sm flex items-center justify-center gap-1"
+                                  className="flex-1 px-2 sm:px-3 py-1.5 sm:py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-[10px] sm:text-sm flex items-center justify-center gap-1"
                                 >
-                                  <Edit className="size-4" />
+                                  <Edit className="size-3 sm:size-4" />
                                   Kirim Ulang
                                 </button>
                               ) : (
                                 <>
                                   <button
                                     onClick={() => setEditingProduct(product)}
-                                    className="flex-1 px-3 py-2 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors text-sm flex items-center justify-center gap-1"
+                                    className="flex-1 px-2 sm:px-3 py-1.5 sm:py-2 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors text-[10px] sm:text-sm flex items-center justify-center gap-0.5 sm:gap-1"
                                   >
-                                    <Edit className="size-4" />
+                                    <Edit className="size-3 sm:size-4" />
                                     Edit
                                   </button>
                                   <button
                                     onClick={() => handleDeleteProduct(product.id)}
-                                    className="flex-1 px-3 py-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors text-sm flex items-center justify-center gap-1"
+                                    className="flex-1 px-2 sm:px-3 py-1.5 sm:py-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors text-[10px] sm:text-sm flex items-center justify-center gap-0.5 sm:gap-1"
                                   >
-                                    <Trash2 className="size-4" />
+                                    <Trash2 className="size-3 sm:size-4" />
                                     Hapus
                                   </button>
                                 </>
