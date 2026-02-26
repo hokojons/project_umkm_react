@@ -473,10 +473,10 @@ export function GiftPackageManagement() {
   return (
     <div className="space-y-6">
       {/* Header with Create Button */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h3 className="text-slate-900 dark:text-white">Manajemen Paket Hadiah</h3>
-          <p className="text-sm text-slate-500 dark:text-gray-400 mt-1">
+          <h3 className="text-slate-900 dark:text-white text-base sm:text-lg">Manajemen Paket Hadiah</h3>
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-gray-400 mt-1">
             Kelola paket hadiah spesial untuk berbagai acara
           </p>
         </div>
@@ -497,7 +497,7 @@ export function GiftPackageManagement() {
               tanggal_akhir: "",
             });
           }}
-          className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center gap-2 text-sm"
+          className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center gap-2 text-sm self-start sm:self-auto"
         >
           <Plus className="size-4" />
           Buat Paket Baru
@@ -519,50 +519,50 @@ export function GiftPackageManagement() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 border-b border-slate-200 dark:border-gray-700">
+      <div className="flex gap-1 sm:gap-2 border-b border-slate-200 dark:border-gray-700 overflow-x-auto">
         <button
           onClick={() => setActiveTab('pending')}
-          className={`px-4 py-2 text-sm font-medium transition-colors ${activeTab === 'pending'
+          className={`px-2.5 sm:px-4 py-2 text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${activeTab === 'pending'
             ? 'border-b-2 border-amber-500 text-amber-600'
             : 'text-slate-500 hover:text-slate-700 dark:text-gray-400'
             }`}
         >
-          <Clock className="size-4 inline mr-2" />
-          Pending Review
+          <Clock className="size-3.5 sm:size-4 inline mr-1 sm:mr-2" />
+          Pending
         </button>
         <button
           onClick={() => setActiveTab('active')}
-          className={`px-4 py-2 text-sm font-medium transition-colors ${activeTab === 'active'
+          className={`px-2.5 sm:px-4 py-2 text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${activeTab === 'active'
             ? 'border-b-2 border-green-500 text-green-600'
             : 'text-slate-500 hover:text-slate-700 dark:text-gray-400'
             }`}
         >
-          <CheckCircle className="size-4 inline mr-2" />
+          <CheckCircle className="size-3.5 sm:size-4 inline mr-1 sm:mr-2" />
           Aktif
         </button>
         <button
           onClick={() => setActiveTab('rejected')}
-          className={`px-4 py-2 text-sm font-medium transition-colors ${activeTab === 'rejected'
+          className={`px-2.5 sm:px-4 py-2 text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${activeTab === 'rejected'
             ? 'border-b-2 border-red-500 text-red-600'
             : 'text-slate-500 hover:text-slate-700 dark:text-gray-400'
             }`}
         >
-          <XCircle className="size-4 inline mr-2" />
+          <XCircle className="size-3.5 sm:size-4 inline mr-1 sm:mr-2" />
           Ditolak
         </button>
         <button
           onClick={() => setActiveTab('expired')}
-          className={`px-4 py-2 text-sm font-medium transition-colors ${activeTab === 'expired'
+          className={`px-2.5 sm:px-4 py-2 text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${activeTab === 'expired'
             ? 'border-b-2 border-gray-500 text-gray-600'
             : 'text-slate-500 hover:text-slate-700 dark:text-gray-400'
             }`}
         >
-          <Clock className="size-4 inline mr-2" />
+          <Clock className="size-3.5 sm:size-4 inline mr-1 sm:mr-2" />
           Expired
         </button>
         <button
           onClick={() => setActiveTab('all')}
-          className={`px-4 py-2 text-sm font-medium transition-colors ${activeTab === 'all'
+          className={`px-2.5 sm:px-4 py-2 text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${activeTab === 'all'
             ? 'border-b-2 border-indigo-500 text-indigo-600'
             : 'text-slate-500 hover:text-slate-700 dark:text-gray-400'
             }`}
@@ -628,7 +628,7 @@ export function GiftPackageManagement() {
 
       {/* Create/Edit Form */}
       {(isCreating || editingId) && (
-        <div className="bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-lg p-6">
+        <div className="bg-white dark:bg-gray-800 border border-slate-200 dark:border-gray-700 rounded-lg p-3 sm:p-6">
           <div className="flex items-center justify-between mb-4">
             <h4 className="text-slate-900 dark:text-white">
               {editingId ? "Edit Paket Hadiah" : "Buat Paket Hadiah Baru (Admin)"}
@@ -662,7 +662,7 @@ export function GiftPackageManagement() {
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className={`block text-sm mb-2 ${formErrors.name ? 'text-red-600 font-medium' : 'text-slate-700 dark:text-gray-300'}`}>Nama Paket *</label>
                 <input
@@ -706,7 +706,7 @@ export function GiftPackageManagement() {
               {formErrors.description && <p className="text-xs text-red-600 mt-1">{formErrors.description}</p>}
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className={`block text-sm mb-2 ${formErrors.price ? 'text-red-600 font-medium' : 'text-slate-700 dark:text-gray-300'}`}>Harga (Rp) *</label>
                 <input
@@ -739,7 +739,7 @@ export function GiftPackageManagement() {
                 <Calendar className="size-4 inline mr-2" />
                 Masa Berlaku *
               </label>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className={`block text-xs mb-1 ${formErrors.tanggal_mulai ? 'text-red-600 font-medium' : 'text-slate-600 dark:text-gray-400'}`}>Tanggal Mulai *</label>
                   <input
