@@ -364,54 +364,25 @@ export function UMKMOrdersPage() {
                                         className="p-3 md:p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition"
                                         onClick={() => toggleExpand(order.id)}
                                     >
-                                        <div className="flex items-start justify-between gap-2">
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex flex-wrap items-center gap-1.5 md:gap-2 mb-2">
-                                                    {/* Order Number */}
-                                                    <div className="flex items-center gap-1">
-                                                        <p className="font-bold text-sm md:text-base text-gray-900 dark:text-white truncate">
-                                                            {order.order_number || `#${order.id.slice(-8)}`}
-                                                        </p>
-                                                        <button
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                copyOrderNumber(order.order_number || order.id);
-                                                            }}
-                                                            className="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition flex-shrink-0"
-                                                            title="Salin nomor pesanan"
-                                                        >
-                                                            <Copy className="size-3 text-gray-400" />
-                                                        </button>
-                                                    </div>
-                                                    <span className={`text-[10px] md:text-xs px-2 py-0.5 md:py-1 rounded-full font-medium whitespace-nowrap ${getStatusColor(order.status)}`}>
-                                                        {getStatusText(order.status)}
-                                                    </span>
-                                                    {order.status === "paid" && (
-                                                        <span className="text-[10px] md:text-xs px-2 py-0.5 md:py-1 rounded-full bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 font-medium animate-pulse whitespace-nowrap">
-                                                            ⚠️ Perlu Diproses
-                                                        </span>
-                                                    )}
-                                                </div>
-                                                <div className="flex flex-wrap items-center gap-2 md:gap-4 text-xs md:text-sm text-gray-600 dark:text-gray-400">
-                                                    <div className="flex items-center gap-1">
-                                                        <User className="size-3 md:size-4" />
-                                                        <span className="truncate max-w-[120px] md:max-w-none">{order.user?.nama_lengkap || order.user?.name || "Pelanggan"}</span>
-                                                    </div>
-                                                    <div className="flex items-center gap-1">
-                                                        <Clock className="size-3 md:size-4" />
-                                                        <span>{formatDate(order.created_at)}</span>
-                                                    </div>
-                                                    {order.paid_at && (
-                                                        <div className="flex items-center gap-1 text-green-600 dark:text-green-400">
-                                                            <CreditCard className="size-3 md:size-4" />
-                                                            <span>Bayar: {formatDate(order.paid_at)}</span>
-                                                        </div>
-                                                    )}
-                                                </div>
+                                        {/* Row 1: Order Number + Total + Chevron */}
+                                        <div className="flex items-center justify-between gap-2 mb-1.5">
+                                            <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                                                <p className="font-bold text-xs md:text-base text-gray-900 dark:text-white truncate">
+                                                    {order.order_number || `#${order.id.slice(-8)}`}
+                                                </p>
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        copyOrderNumber(order.order_number || order.id);
+                                                    }}
+                                                    className="p-0.5 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition flex-shrink-0"
+                                                    title="Salin nomor pesanan"
+                                                >
+                                                    <Copy className="size-3 text-gray-400" />
+                                                </button>
                                             </div>
-                                            <div className="text-right flex items-center gap-1 md:gap-2 flex-shrink-0">
-                                                <div>
-                                                    <p className="text-[10px] md:text-xs text-gray-500 dark:text-gray-400">Total</p>
+                                            <div className="flex items-center gap-1.5 flex-shrink-0">
+                                                <div className="text-right">
                                                     <p className="font-bold text-sm md:text-base text-indigo-600 dark:text-indigo-400">
                                                         {formatCurrency(order.total_harga)}
                                                     </p>
@@ -422,6 +393,34 @@ export function UMKMOrdersPage() {
                                                     <ChevronDown className="size-4 md:size-5 text-gray-400" />
                                                 )}
                                             </div>
+                                        </div>
+                                        {/* Row 2: Status Badges */}
+                                        <div className="flex flex-wrap items-center gap-1.5 mb-1.5">
+                                            <span className={`text-[10px] md:text-xs px-2 py-0.5 rounded-full font-medium whitespace-nowrap ${getStatusColor(order.status)}`}>
+                                                {getStatusText(order.status)}
+                                            </span>
+                                            {order.status === "paid" && (
+                                                <span className="text-[10px] md:text-xs px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 font-medium animate-pulse whitespace-nowrap">
+                                                    ⚠️ Perlu Diproses
+                                                </span>
+                                            )}
+                                        </div>
+                                        {/* Row 3: Customer Info & Date */}
+                                        <div className="flex flex-wrap items-center gap-2 md:gap-4 text-[11px] md:text-sm text-gray-500 dark:text-gray-400">
+                                            <div className="flex items-center gap-1">
+                                                <User className="size-3 md:size-4" />
+                                                <span className="truncate max-w-[100px] md:max-w-none">{order.user?.nama_lengkap || order.user?.name || "Pelanggan"}</span>
+                                            </div>
+                                            <div className="flex items-center gap-1">
+                                                <Clock className="size-3 md:size-4" />
+                                                <span>{formatDate(order.created_at)}</span>
+                                            </div>
+                                            {order.paid_at && (
+                                                <div className="flex items-center gap-1 text-green-600 dark:text-green-400">
+                                                    <CreditCard className="size-3 md:size-4" />
+                                                    <span>Bayar: {formatDate(order.paid_at)}</span>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
 
