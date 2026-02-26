@@ -318,3 +318,22 @@ Route::get('/storage/{folder}/{filename}', function ($folder, $filename) {
 // Site Settings Routes (for admin)
 Route::get('/site-settings', [\App\Http\Controllers\Api\SiteSettingsController::class, 'index']);
 Route::post('/site-settings', [\App\Http\Controllers\Api\SiteSettingsController::class, 'update']);
+
+// Serve uploaded files (toko photos, products, site logo, etc.)
+// PHP built-in server doesn't reliably serve static files on Railway
+Route::get('/uploads/{path}', function ($path) {
+    $filePath = public_path("uploads/{$path}");
+    
+    if (!file_exists($filePath)) {
+        \Log::warning("Upload file not found: uploads/{$path}");
+        return response()->json(['error' => 'File not found'], 404);
+    }
+    
+    $mimeType = mime_content_type($filePath) ?: 'application/octet-stream';
+    return response()->file($filePath, [
+        'Content-Type' => $mimeType,
+        'Cache-Control' => 'public, max-age=31536000',
+        'Access-Control-Allow-Origin' => '*',
+    ]);
+})->where('path', '.*');
+
