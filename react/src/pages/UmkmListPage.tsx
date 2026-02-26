@@ -102,20 +102,20 @@ export function UmkmListPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 pt-20">
-            <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 pt-16">
+            <div className="max-w-7xl mx-auto px-4 py-4 md:py-8">
                 {/* Header */}
-                <div className="mb-8">
-                    <h1 className="text-4xl font-bold text-gray-800 dark:text-white mb-2">
+                <div className="mb-4 md:mb-8">
+                    <h1 className="text-2xl md:text-4xl font-bold text-gray-800 dark:text-white mb-1 md:mb-2">
                         Daftar UMKM
                     </h1>
-                    <p className="text-gray-600 dark:text-gray-300">
+                    <p className="text-sm md:text-base text-gray-600 dark:text-gray-300">
                         Temukan dan dukung UMKM lokal favorit Anda
                     </p>
                 </div>
 
                 {/* Search and Filter */}
-                <div className="mb-8 space-y-4">
+                <div className="mb-4 md:mb-8 space-y-3 md:space-y-4">
                     {/* Search Bar */}
                     <div className="relative max-w-2xl">
                         <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />

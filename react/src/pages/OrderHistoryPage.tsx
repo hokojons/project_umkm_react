@@ -231,8 +231,8 @@ export function OrderHistoryPage() {
 
     if (!user) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 pt-20">
-                <div className="max-w-4xl mx-auto px-4 py-12 text-center">
+            <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 pt-16">
+                <div className="max-w-4xl mx-auto px-4 py-8 text-center">
                     <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                     <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
                         Silakan Login
@@ -250,10 +250,10 @@ export function OrderHistoryPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 pt-20">
-            <div className="max-w-6xl mx-auto px-4 py-8">
+        <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 pt-16">
+            <div className="max-w-6xl mx-auto px-4 py-4 md:py-8">
                 {/* Header */}
-                <div className="flex items-center gap-4 mb-8">
+                <div className="flex items-center gap-3 md:gap-4 mb-4 md:mb-8">
                     <Button
                         onClick={() => navigate(-1)}
                         variant="outline"
@@ -264,10 +264,10 @@ export function OrderHistoryPage() {
                         Kembali
                     </Button>
                     <div className="flex-1">
-                        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                        <h1 className="text-xl md:text-3xl font-bold text-gray-900 dark:text-white">
                             Riwayat Pesanan
                         </h1>
-                        <p className="text-gray-600 dark:text-gray-400">
+                        <p className="text-sm md:text-base text-gray-600 dark:text-gray-400">
                             Lihat semua pesanan Anda
                         </p>
                     </div>

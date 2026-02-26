@@ -102,10 +102,10 @@ export const EventList = forwardRef<HTMLElement, EventListProps>(
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Filter Tabs */}
-          <div className="flex justify-center gap-3 mb-8">
+          <div className="flex flex-wrap justify-center gap-2 md:gap-3 mb-6 md:mb-8">
             <button
               onClick={() => setFilter("all")}
-              className={`px-6 py-2 rounded-full transition-all shadow-sm font-medium ${filter === "all"
+              className={`px-4 md:px-6 py-1.5 md:py-2 rounded-full transition-all shadow-sm font-medium text-sm ${filter === "all"
                 ? "bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-lg"
                 : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-100 hover:bg-purple-50 dark:hover:bg-gray-600 border border-purple-200 dark:border-gray-600"
                 }`}
@@ -114,7 +114,7 @@ export const EventList = forwardRef<HTMLElement, EventListProps>(
             </button>
             <button
               onClick={() => setFilter("upcoming")}
-              className={`px-6 py-2 rounded-full transition-all shadow-sm font-medium ${filter === "upcoming"
+              className={`px-4 md:px-6 py-1.5 md:py-2 rounded-full transition-all shadow-sm font-medium text-sm ${filter === "upcoming"
                 ? "bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-lg"
                 : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-100 hover:bg-purple-50 dark:hover:bg-gray-600 border border-purple-200 dark:border-gray-600"
                 }`}
@@ -124,7 +124,7 @@ export const EventList = forwardRef<HTMLElement, EventListProps>(
             </button>
             <button
               onClick={() => setFilter("ongoing")}
-              className={`px-6 py-2 rounded-full transition-all shadow-sm font-medium ${filter === "ongoing"
+              className={`px-4 md:px-6 py-1.5 md:py-2 rounded-full transition-all shadow-sm font-medium text-sm ${filter === "ongoing"
                 ? "bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-lg"
                 : "bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-100 hover:bg-purple-50 dark:hover:bg-gray-600 border border-purple-200 dark:border-gray-600"
                 }`}

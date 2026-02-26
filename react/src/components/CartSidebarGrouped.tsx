@@ -14,6 +14,7 @@ import {
 import { motion, AnimatePresence } from "motion/react";
 import { useCart } from "../context/CartContext";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
+import { getImageUrl } from "../utils/imageHelpers";
 import { useState } from "react";
 import { WhatsAppCheckoutModal } from "./WhatsAppCheckoutModal";
 import { toast } from "sonner";
@@ -399,13 +400,11 @@ export function CartSidebarGrouped({
                                         </button>
 
                                         {/* Product Image */}
-                                        {item.image && (
-                                          <ImageWithFallback
-                                            src={item.image}
-                                            alt={item.name}
-                                            className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
-                                          />
-                                        )}
+                                        <ImageWithFallback
+                                          src={getImageUrl(item.image)}
+                                          alt={item.name}
+                                          className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
+                                        />
 
                                         {/* Product Info */}
                                         <div className="flex-1 min-w-0">
