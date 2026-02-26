@@ -575,65 +575,66 @@ export function UMKMDashboard({
 
           <div className="p-3 sm:p-6">
             {/* Tabs */}
-            <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-2 mb-6 sm:justify-between sm:items-center">
-              <div className="flex flex-wrap gap-2">
+            <div className="flex flex-col gap-3 mb-4 sm:mb-6">
+              {/* Tab Buttons */}
+              <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-1 hide-scrollbar">
                 <button
                   onClick={() => setActiveTab("businesses")}
-                  className={`px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1.5 sm:gap-2 transition-colors text-sm sm:text-base ${activeTab === "businesses"
-                    ? "bg-indigo-600 text-white"
-                    : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                  className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-full flex items-center gap-1.5 transition-colors text-xs sm:text-sm font-medium whitespace-nowrap ${activeTab === "businesses"
+                    ? "bg-indigo-600 text-white shadow-md"
+                    : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
                     }`}
                 >
-                  <StoreIcon className="size-4 sm:size-5" />
-                  Toko Saya ({businesses.length})
+                  <StoreIcon className="size-3.5 sm:size-4" />
+                  Toko ({businesses.length})
                 </button>
                 <button
                   onClick={() => setActiveTab("products")}
-                  className={`px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1.5 sm:gap-2 transition-colors text-sm sm:text-base ${activeTab === "products"
-                    ? "bg-indigo-600 text-white"
-                    : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                  className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-full flex items-center gap-1.5 transition-colors text-xs sm:text-sm font-medium whitespace-nowrap ${activeTab === "products"
+                    ? "bg-indigo-600 text-white shadow-md"
+                    : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
                     }`}
                 >
-                  <Package className="size-4 sm:size-5" />
+                  <Package className="size-3.5 sm:size-4" />
                   Produk ({products.length})
                 </button>
                 <button
                   onClick={() => setActiveTab("packages")}
-                  className={`px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1.5 sm:gap-2 transition-colors text-sm sm:text-base ${activeTab === "packages"
-                    ? "bg-indigo-600 text-white"
-                    : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                  className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-full flex items-center gap-1.5 transition-colors text-xs sm:text-sm font-medium whitespace-nowrap ${activeTab === "packages"
+                    ? "bg-indigo-600 text-white shadow-md"
+                    : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
                     }`}
                 >
-                  <Gift className="size-4 sm:size-5" />
-                  Paket Saya ({myPackages.length})
+                  <Gift className="size-3.5 sm:size-4" />
+                  Paket ({myPackages.length})
                 </button>
               </div>
 
-              {/* NEW: Action Buttons */}
-              <div className="flex gap-2 flex-wrap w-full sm:w-auto">
+              {/* Action Buttons */}
+              <div className="flex gap-1.5 sm:gap-2 flex-wrap">
                 <button
                   onClick={() => setShowRejectionComments(true)}
-                  className="px-4 py-2 rounded-lg flex items-center gap-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors text-sm"
+                  className="px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-lg flex items-center gap-1.5 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors text-xs sm:text-sm border border-red-200 dark:border-red-800"
                 >
-                  <AlertCircle className="size-4" />
-                  Lihat Penolakan
+                  <AlertCircle className="size-3.5 sm:size-4" />
+                  Penolakan
                 </button>
 
                 {hasApprovedUmkm && (
                   <>
                     <button
                       onClick={() => setShowAddProduct(true)}
-                      className="px-4 py-2 rounded-lg flex items-center gap-2 bg-green-600 text-white hover:bg-green-700 transition-colors text-sm"
+                      className="px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-lg flex items-center gap-1.5 bg-green-600 text-white hover:bg-green-700 transition-colors text-xs sm:text-sm"
                     >
-                      <Plus className="size-4" />
-                      Tambah Produk
+                      <Plus className="size-3.5 sm:size-4" />
+                      Produk
                     </button>
                     <button
                       onClick={() => setShowPackageSubmission(true)}
-                      className="px-4 py-2 rounded-lg flex items-center gap-2 bg-purple-600 text-white hover:bg-purple-700 transition-colors text-sm"
+                      className="px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-lg flex items-center gap-1.5 bg-purple-600 text-white hover:bg-purple-700 transition-colors text-xs sm:text-sm"
                     >
-                      <Gift className="size-4" />
-                      Ajukan Paket Spesial
+                      <Gift className="size-3.5 sm:size-4" />
+                      Paket Spesial
                     </button>
                   </>
                 )}
@@ -654,24 +655,24 @@ export function UMKMDashboard({
                     </p>
                   </div>
                 ) : (
-                  <div className="space-y-6">
+                  <div className="space-y-4 sm:space-y-6">
                     {businesses.map((business) => (
                       <div
                         key={business.id}
-                        className="border border-gray-200 dark:border-gray-600 rounded-xl p-4 sm:p-6 bg-white dark:bg-gray-700"
+                        className="border border-gray-200 dark:border-gray-600 rounded-xl p-3 sm:p-6 bg-white dark:bg-gray-700"
                       >
                         {/* Store Header with Image */}
-                        <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 mb-4 sm:mb-6">
-                          <div className="flex-shrink-0 flex justify-center sm:justify-start">
+                        <div className="flex flex-row gap-3 sm:gap-6 mb-3 sm:mb-6">
+                          <div className="flex-shrink-0">
                             <div className="relative">
                               <img
                                 src={editingBusiness?.id === business.id ? editingBusiness.image : business.image}
                                 alt={business.name}
-                                className="w-24 h-24 sm:w-32 sm:h-32 object-cover rounded-xl border-2 border-gray-200 dark:border-gray-600"
+                                className="w-16 h-16 sm:w-32 sm:h-32 object-cover rounded-lg sm:rounded-xl border-2 border-gray-200 dark:border-gray-600"
                               />
                               {editingBusiness?.id === business.id && (
-                                <label className="absolute bottom-2 right-2 p-2 bg-indigo-600 text-white rounded-full cursor-pointer hover:bg-indigo-700 transition-colors">
-                                  <Upload className="size-4" />
+                                <label className="absolute -bottom-1 -right-1 sm:bottom-2 sm:right-2 p-1.5 sm:p-2 bg-indigo-600 text-white rounded-full cursor-pointer hover:bg-indigo-700 transition-colors">
+                                  <Upload className="size-3 sm:size-4" />
                                   <input
                                     type="file"
                                     accept="image/*"
@@ -683,10 +684,10 @@ export function UMKMDashboard({
                             </div>
                           </div>
 
-                          <div className="flex-1 space-y-4">
+                          <div className="flex-1 min-w-0 space-y-2 sm:space-y-4">
                             {/* Store Name */}
                             <div>
-                              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                              <label className="block text-[10px] sm:text-sm font-medium text-gray-500 dark:text-gray-400">
                                 Nama Toko
                               </label>
                               {editingBusiness?.id === business.id ? (
@@ -694,35 +695,35 @@ export function UMKMDashboard({
                                   type="text"
                                   value={editingBusiness.name}
                                   onChange={(e) => setEditingBusiness({ ...editingBusiness, name: e.target.value })}
-                                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500"
+                                  className="w-full px-3 py-1.5 sm:px-4 sm:py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 text-sm"
                                 />
                               ) : (
-                                <p className="text-lg font-semibold text-gray-900 dark:text-white">{business.name}</p>
+                                <p className="text-sm sm:text-lg font-semibold text-gray-900 dark:text-white truncate">{business.name}</p>
                               )}
                             </div>
 
                             {/* Owner Name */}
                             <div>
-                              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                Nama Pemilik
+                              <label className="block text-[10px] sm:text-sm font-medium text-gray-500 dark:text-gray-400">
+                                Pemilik
                               </label>
                               {editingBusiness?.id === business.id ? (
                                 <input
                                   type="text"
                                   value={editingBusiness.owner}
                                   onChange={(e) => setEditingBusiness({ ...editingBusiness, owner: e.target.value })}
-                                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500"
+                                  className="w-full px-3 py-1.5 sm:px-4 sm:py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 text-sm"
                                 />
                               ) : (
-                                <p className="text-gray-700 dark:text-gray-300">{business.owner}</p>
+                                <p className="text-sm text-gray-700 dark:text-gray-300 truncate">{business.owner}</p>
                               )}
                             </div>
                           </div>
                         </div>
 
                         {/* Description */}
-                        <div className="mb-4">
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        <div className="mb-3 sm:mb-4">
+                          <label className="block text-[10px] sm:text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
                             Deskripsi Toko
                           </label>
                           {editingBusiness?.id === business.id ? (
@@ -730,10 +731,10 @@ export function UMKMDashboard({
                               value={editingBusiness.description}
                               onChange={(e) => setEditingBusiness({ ...editingBusiness, description: e.target.value })}
                               rows={3}
-                              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 resize-none"
+                              className="w-full px-3 py-1.5 sm:px-4 sm:py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 resize-none text-sm"
                             />
                           ) : (
-                            <p className="text-gray-600 dark:text-gray-400">{business.description}</p>
+                            <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-3">{business.description}</p>
                           )}
                         </div>
 
@@ -831,8 +832,8 @@ export function UMKMDashboard({
                         </div>
 
                         {/* About / Bio */}
-                        <div className="mb-4">
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        <div className="mb-3 sm:mb-4">
+                          <label className="block text-[10px] sm:text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
                             Tentang Toko
                           </label>
                           {editingBusiness?.id === business.id ? (
@@ -841,10 +842,10 @@ export function UMKMDashboard({
                               onChange={(e) => setEditingBusiness({ ...editingBusiness, about: e.target.value })}
                               rows={3}
                               placeholder="Ceritakan tentang toko Anda..."
-                              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 resize-none"
+                              className="w-full px-3 py-1.5 sm:px-4 sm:py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 resize-none text-sm"
                             />
                           ) : (
-                            <p className="text-gray-600 dark:text-gray-400">{business.about || "Belum ada deskripsi"}</p>
+                            <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">{business.about || "Belum ada deskripsi"}</p>
                           )}
                         </div>
 
@@ -967,7 +968,7 @@ export function UMKMDashboard({
                     </p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4">
                     {products
                       .filter((product) =>
                         productSearchQuery === '' ||
@@ -983,26 +984,26 @@ export function UMKMDashboard({
                             <img
                               src={product.image}
                               alt={product.name}
-                              className="w-full h-48 object-cover"
+                              className="w-full h-32 sm:h-48 object-cover"
                             />
                           )}
-                          <div className="p-4">
+                          <div className="p-2.5 sm:p-4">
                             {/* Product Name */}
-                            <h4 className="font-semibold text-gray-900 dark:text-white mb-1 line-clamp-1">
+                            <h4 className="font-semibold text-gray-900 dark:text-white mb-1 line-clamp-1 text-xs sm:text-base">
                               {product.name}
                             </h4>
 
                             {/* Description */}
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">
+                            <p className="text-[10px] sm:text-sm text-gray-600 dark:text-gray-400 mb-2 sm:mb-3 line-clamp-2 hidden sm:block">
                               {product.description}
                             </p>
 
                             {/* Price & Stock */}
-                            <div className="flex items-center justify-between mb-3">
-                              <span className="text-lg font-bold text-indigo-600 dark:text-indigo-400">
+                            <div className="flex items-center justify-between mb-2 sm:mb-3">
+                              <span className="text-xs sm:text-lg font-bold text-indigo-600 dark:text-indigo-400">
                                 {formatCurrency(product.price)}
                               </span>
-                              <span className={`text-sm px-2 py-1 rounded ${(product.stok || 0) > 0
+                              <span className={`text-[10px] sm:text-sm px-1.5 sm:px-2 py-0.5 sm:py-1 rounded ${(product.stok || 0) > 0
                                 ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400"
                                 : "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400"
                                 }`}>
