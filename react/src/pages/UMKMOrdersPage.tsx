@@ -432,9 +432,8 @@ export function UMKMOrdersPage() {
                                                 {/* Lihat Detail Button - Always visible */}
                                                 <Button
                                                     onClick={(e) => { e.stopPropagation(); setPaymentDetailOrder(order); }}
-                                                    variant="outline"
                                                     size="sm"
-                                                    className="flex items-center gap-1.5 md:gap-2 text-xs md:text-sm text-blue-600 border-blue-300 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-600 dark:hover:bg-blue-900/30"
+                                                    className="flex items-center gap-1.5 md:gap-2 text-xs md:text-sm bg-blue-600 hover:bg-blue-700 text-white"
                                                 >
                                                     <Eye className="size-3.5 md:size-4" />
                                                     Lihat Detail
@@ -443,9 +442,8 @@ export function UMKMOrdersPage() {
                                                 {/* WhatsApp Button - Always show */}
                                                 <Button
                                                     onClick={(e) => { e.stopPropagation(); handleWhatsAppCustomer(order); }}
-                                                    variant="outline"
                                                     size="sm"
-                                                    className="flex items-center gap-1.5 md:gap-2 text-xs md:text-sm"
+                                                    className="flex items-center gap-1.5 md:gap-2 text-xs md:text-sm bg-green-600 hover:bg-green-700 text-white"
                                                 >
                                                     <MessageCircle className="size-3.5 md:size-4" />
                                                     Hubungi Pembeli
@@ -470,9 +468,8 @@ export function UMKMOrdersPage() {
                                                         <Button
                                                             onClick={(e) => { e.stopPropagation(); handleUpdateStatus(order.id, "cancelled"); }}
                                                             disabled={isUpdating}
-                                                            variant="outline"
                                                             size="sm"
-                                                            className="flex items-center gap-2 text-red-600 border-red-300 hover:bg-red-50"
+                                                            className="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white"
                                                         >
                                                             <XCircle className="size-4" />
                                                             Tolak
