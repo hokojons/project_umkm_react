@@ -120,29 +120,29 @@ export function Navbar({
 
   return (
     <nav className="fixed top-0 left-0 right-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm shadow-lg z-50 border-b border-gray-200 dark:border-gray-800">
-      <div className="max-w-7xl mx-auto px-4 py-4">
+      <div className="max-w-7xl mx-auto px-3 md:px-4 py-2 md:py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link
             to="/"
-            className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+            className="flex items-center gap-2 md:gap-3 hover:opacity-80 transition-opacity min-w-0"
           >
             {settings.siteLogo ? (
               <img
                 src={settings.siteLogo.startsWith('http') ? settings.siteLogo : `${BASE_HOST}/${settings.siteLogo}`}
                 alt={settings.siteName}
-                className="w-10 h-10 rounded-xl object-contain"
+                className="w-8 h-8 md:w-10 md:h-10 rounded-xl object-contain flex-shrink-0"
               />
             ) : (
               <div className="bg-gradient-to-r from-orange-500 to-amber-500 p-2 rounded-xl shadow-lg">
                 <Store className="w-6 h-6 text-white" />
               </div>
             )}
-            <div>
-              <h1 className="text-xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
+            <div className="min-w-0">
+              <h1 className="text-base md:text-xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent truncate">
                 {settings.siteName}
               </h1>
-              <p className="text-xs text-gray-600 dark:text-gray-400">
+              <p className="text-[10px] md:text-xs text-gray-600 dark:text-gray-400">
                 Dukung Produk Lokal
               </p>
             </div>
@@ -166,7 +166,7 @@ export function Navbar({
           </div>
 
           {/* Right Section */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1 md:gap-4">
             {/* Dark Mode Toggle */}
             <button
               onClick={onToggleDarkMode}
