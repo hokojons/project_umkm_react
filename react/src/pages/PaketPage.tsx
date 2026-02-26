@@ -125,20 +125,20 @@ export function PaketPage() {
 
     return (
         <>
-            <div className="min-h-screen pt-24 pb-12">
+            <div className="min-h-screen pt-20 sm:pt-24 pb-8 sm:pb-12">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     {/* Header */}
-                    <div className="mb-8">
-                        <h1 className="text-4xl font-bold text-gray-800 dark:text-white mb-2">
+                    <div className="mb-4 sm:mb-8">
+                        <h1 className="text-2xl sm:text-4xl font-bold text-gray-800 dark:text-white mb-1 sm:mb-2">
                             Paket Spesial
                         </h1>
-                        <p className="text-gray-600 dark:text-gray-300">
+                        <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300">
                             Temukan paket hadiah istimewa dari berbagai UMKM lokal
                         </p>
                     </div>
 
                     {/* Search */}
-                    <div className="mb-8 space-y-4">
+                    <div className="mb-4 sm:mb-8 space-y-3 sm:space-y-4">
                         <div className="relative max-w-2xl">
                             <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                             <input
@@ -158,7 +158,7 @@ export function PaketPage() {
 
                     {/* Loading State */}
                     {loading ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                             {[...Array(8)].map((_, i) => (
                                 <div key={i} className="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-lg animate-pulse">
                                     <div className="h-48 bg-gray-200 dark:bg-gray-700" />
@@ -182,7 +182,7 @@ export function PaketPage() {
                             </p>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                             {filteredPackages.map((pkg) => (
                                 <div
                                     key={pkg.id}

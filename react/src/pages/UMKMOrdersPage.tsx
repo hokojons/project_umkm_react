@@ -250,11 +250,11 @@ export function UMKMOrdersPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 pt-20">
-            <div className="max-w-6xl mx-auto px-4 py-8">
+        <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 pt-16 md:pt-20">
+            <div className="max-w-6xl mx-auto px-3 md:px-4 py-4 md:py-8">
                 {/* Header */}
-                <div className="flex items-center justify-between mb-8">
-                    <div className="flex items-center gap-4">
+                <div className="mb-4 md:mb-8">
+                    <div className="flex items-center justify-between mb-2">
                         <Button
                             onClick={() => navigate(-1)}
                             variant="outline"
@@ -264,30 +264,28 @@ export function UMKMOrdersPage() {
                             <ArrowLeft className="w-4 h-4" />
                             Kembali
                         </Button>
-                        <div>
-                            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                                📦 Kelola Pesanan
-                            </h1>
-                            <p className="text-gray-600 dark:text-gray-400">
-                                Kelola pesanan masuk dari pelanggan
-                            </p>
-                        </div>
+                        <Button
+                            onClick={loadOrders}
+                            variant="outline"
+                            size="sm"
+                            disabled={loading}
+                            className="flex items-center gap-2"
+                        >
+                            <RefreshCw className={`size-4 ${loading ? 'animate-spin' : ''}`} />
+                            Refresh
+                        </Button>
                     </div>
-                    <Button
-                        onClick={loadOrders}
-                        variant="outline"
-                        size="sm"
-                        disabled={loading}
-                        className="flex items-center gap-2"
-                    >
-                        <RefreshCw className={`size-4 ${loading ? 'animate-spin' : ''}`} />
-                        Refresh
-                    </Button>
+                    <h1 className="text-xl md:text-3xl font-bold text-gray-900 dark:text-white">
+                        📦 Kelola Pesanan
+                    </h1>
+                    <p className="text-sm md:text-base text-gray-600 dark:text-gray-400">
+                        Kelola pesanan masuk dari pelanggan
+                    </p>
                 </div>
 
                 {/* Filter Tabs */}
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 mb-6">
-                    <div className="flex flex-wrap gap-2">
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-3 md:p-4 mb-4 md:mb-6">
+                    <div className="flex flex-wrap gap-1.5 md:gap-2">
                         {[
                             { key: "all", label: "Semua", count: orders.length },
                             { key: "pending", label: "Menunggu Bayar", count: countByStatus("pending") },
@@ -299,7 +297,7 @@ export function UMKMOrdersPage() {
                             <button
                                 key={tab.key}
                                 onClick={() => setFilter(tab.key as typeof filter)}
-                                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${filter === tab.key
+                                className={`px-3 md:px-4 py-1.5 md:py-2 rounded-full text-xs md:text-sm font-medium transition-all ${filter === tab.key
                                     ? "bg-indigo-600 text-white shadow-lg"
                                     : tab.highlight && tab.count > 0
                                         ? "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border-2 border-blue-500"
@@ -312,14 +310,14 @@ export function UMKMOrdersPage() {
                     </div>
 
                     {/* Search Bar */}
-                    <div className="mt-4 relative">
+                    <div className="mt-3 md:mt-4 relative">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400" />
                         <input
                             type="text"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            placeholder="Cari nomor pesanan atau nama pelanggan..."
-                            className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                            placeholder="Cari nomor pesanan atau nama pelang..."
+                            className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm md:text-base"
                         />
                         {searchQuery && (
                             <button
@@ -363,15 +361,15 @@ export function UMKMOrdersPage() {
                                 >
                                     {/* Order Header */}
                                     <div
-                                        className="p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition"
+                                        className="p-3 md:p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition"
                                         onClick={() => toggleExpand(order.id)}
                                     >
-                                        <div className="flex items-start justify-between">
-                                            <div className="flex-1">
-                                                <div className="flex items-center gap-2 mb-2">
+                                        <div className="flex items-start justify-between gap-2">
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex flex-wrap items-center gap-1.5 md:gap-2 mb-2">
                                                     {/* Order Number */}
                                                     <div className="flex items-center gap-1">
-                                                        <p className="font-bold text-gray-900 dark:text-white">
+                                                        <p className="font-bold text-sm md:text-base text-gray-900 dark:text-white truncate">
                                                             {order.order_number || `#${order.id.slice(-8)}`}
                                                         </p>
                                                         <button
@@ -379,49 +377,49 @@ export function UMKMOrdersPage() {
                                                                 e.stopPropagation();
                                                                 copyOrderNumber(order.order_number || order.id);
                                                             }}
-                                                            className="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition"
+                                                            className="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition flex-shrink-0"
                                                             title="Salin nomor pesanan"
                                                         >
                                                             <Copy className="size-3 text-gray-400" />
                                                         </button>
                                                     </div>
-                                                    <span className={`text-xs px-2 py-1 rounded-full font-medium ${getStatusColor(order.status)}`}>
+                                                    <span className={`text-[10px] md:text-xs px-2 py-0.5 md:py-1 rounded-full font-medium whitespace-nowrap ${getStatusColor(order.status)}`}>
                                                         {getStatusText(order.status)}
                                                     </span>
                                                     {order.status === "paid" && (
-                                                        <span className="text-xs px-2 py-1 rounded-full bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 font-medium animate-pulse">
+                                                        <span className="text-[10px] md:text-xs px-2 py-0.5 md:py-1 rounded-full bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 font-medium animate-pulse whitespace-nowrap">
                                                             ⚠️ Perlu Diproses
                                                         </span>
                                                     )}
                                                 </div>
-                                                <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+                                                <div className="flex flex-wrap items-center gap-2 md:gap-4 text-xs md:text-sm text-gray-600 dark:text-gray-400">
                                                     <div className="flex items-center gap-1">
-                                                        <User className="size-4" />
-                                                        <span>{order.user?.nama_lengkap || order.user?.name || "Pelanggan"}</span>
+                                                        <User className="size-3 md:size-4" />
+                                                        <span className="truncate max-w-[120px] md:max-w-none">{order.user?.nama_lengkap || order.user?.name || "Pelanggan"}</span>
                                                     </div>
                                                     <div className="flex items-center gap-1">
-                                                        <Clock className="size-4" />
+                                                        <Clock className="size-3 md:size-4" />
                                                         <span>{formatDate(order.created_at)}</span>
                                                     </div>
                                                     {order.paid_at && (
                                                         <div className="flex items-center gap-1 text-green-600 dark:text-green-400">
-                                                            <CreditCard className="size-4" />
+                                                            <CreditCard className="size-3 md:size-4" />
                                                             <span>Bayar: {formatDate(order.paid_at)}</span>
                                                         </div>
                                                     )}
                                                 </div>
                                             </div>
-                                            <div className="text-right flex items-center gap-2">
+                                            <div className="text-right flex items-center gap-1 md:gap-2 flex-shrink-0">
                                                 <div>
-                                                    <p className="text-xs text-gray-500 dark:text-gray-400">Total</p>
-                                                    <p className="font-bold text-indigo-600 dark:text-indigo-400">
+                                                    <p className="text-[10px] md:text-xs text-gray-500 dark:text-gray-400">Total</p>
+                                                    <p className="font-bold text-sm md:text-base text-indigo-600 dark:text-indigo-400">
                                                         {formatCurrency(order.total_harga)}
                                                     </p>
                                                 </div>
                                                 {isExpanded ? (
-                                                    <ChevronUp className="size-5 text-gray-400" />
+                                                    <ChevronUp className="size-4 md:size-5 text-gray-400" />
                                                 ) : (
-                                                    <ChevronDown className="size-5 text-gray-400" />
+                                                    <ChevronDown className="size-4 md:size-5 text-gray-400" />
                                                 )}
                                             </div>
                                         </div>
@@ -431,15 +429,15 @@ export function UMKMOrdersPage() {
                                     {isExpanded && (
                                         <div className="border-t border-gray-200 dark:border-gray-700">
                                             {/* Action Buttons */}
-                                            <div className="p-4 bg-gray-50 dark:bg-gray-900/50 flex flex-wrap gap-2 items-center">
+                                            <div className="p-3 md:p-4 bg-gray-50 dark:bg-gray-900/50 flex flex-wrap gap-1.5 md:gap-2 items-center">
                                                 {/* Lihat Detail Button - Always visible */}
                                                 <Button
                                                     onClick={(e) => { e.stopPropagation(); setPaymentDetailOrder(order); }}
                                                     variant="outline"
                                                     size="sm"
-                                                    className="flex items-center gap-2 text-blue-600 border-blue-300 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-600 dark:hover:bg-blue-900/30"
+                                                    className="flex items-center gap-1.5 md:gap-2 text-xs md:text-sm text-blue-600 border-blue-300 hover:bg-blue-50 dark:text-blue-400 dark:border-blue-600 dark:hover:bg-blue-900/30"
                                                 >
-                                                    <Eye className="size-4" />
+                                                    <Eye className="size-3.5 md:size-4" />
                                                     Lihat Detail
                                                 </Button>
 
@@ -448,9 +446,9 @@ export function UMKMOrdersPage() {
                                                     onClick={(e) => { e.stopPropagation(); handleWhatsAppCustomer(order); }}
                                                     variant="outline"
                                                     size="sm"
-                                                    className="flex items-center gap-2"
+                                                    className="flex items-center gap-1.5 md:gap-2 text-xs md:text-sm"
                                                 >
-                                                    <MessageCircle className="size-4" />
+                                                    <MessageCircle className="size-3.5 md:size-4" />
                                                     Hubungi Pembeli
                                                 </Button>
 
@@ -536,8 +534,8 @@ export function UMKMOrdersPage() {
 
             {/* Payment Detail Modal */}
             {paymentDetailOrder && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]" onClick={() => setPaymentDetailOrder(null)}>
-                    <div className="bg-white dark:bg-gray-800 rounded-xl max-w-lg w-full mx-4 shadow-2xl max-h-[90vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
+                <div className="fixed inset-0 bg-black/50 flex items-end md:items-center justify-center z-[60]" onClick={() => setPaymentDetailOrder(null)}>
+                    <div className="bg-white dark:bg-gray-800 rounded-t-xl md:rounded-xl max-w-lg w-full mx-0 md:mx-4 shadow-2xl max-h-[85vh] md:max-h-[90vh] overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
                         {/* Header */}
                         <div className="p-4 border-b border-gray-200 dark:border-gray-700">
                             <div className="flex items-center justify-between mb-2">

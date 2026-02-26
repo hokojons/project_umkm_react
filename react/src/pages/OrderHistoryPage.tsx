@@ -251,7 +251,7 @@ export function OrderHistoryPage() {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 pt-16">
-            <div className="max-w-6xl mx-auto px-4 py-4 md:py-8">
+            <div className="max-w-6xl mx-auto px-3 md:px-4 py-4 md:py-8">
                 {/* Header */}
                 <div className="mb-4 md:mb-6">
                     <div className="flex items-center justify-between mb-2">
@@ -284,11 +284,11 @@ export function OrderHistoryPage() {
                 </div>
 
                 {/* Filter Tabs */}
-                <div className="flex flex-wrap gap-2 mb-6">
+                <div className="flex flex-wrap gap-1.5 md:gap-2 mb-4 md:mb-6">
                     {[
                         { key: "all", label: "Semua" },
-                        { key: "pending", label: "Menunggu Pembayaran" },
-                        { key: "paid", label: "Sudah Dibayar" },
+                        { key: "pending", label: "Menunggu Bayar" },
+                        { key: "paid", label: "Sudah Bayar" },
                         { key: "processing", label: "Diproses" },
                         { key: "completed", label: "Selesai" },
                         { key: "cancelled", label: "Dibatalkan" },
@@ -344,14 +344,14 @@ export function OrderHistoryPage() {
                                 >
                                     {/* Order Header */}
                                     <div
-                                        className="p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition"
+                                        className="p-3 md:p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 transition"
                                         onClick={() => toggleExpand(order.id)}
                                     >
-                                        <div className="flex items-start justify-between">
-                                            <div className="flex-1">
+                                        <div className="flex items-start justify-between gap-2">
+                                            <div className="flex-1 min-w-0">
                                                 {/* Order Number */}
-                                                <div className="flex items-center gap-2 mb-1">
-                                                    <span className="text-xs font-mono bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-0.5 rounded">
+                                                <div className="flex flex-wrap items-center gap-1.5 md:gap-2 mb-1">
+                                                    <span className="text-[10px] md:text-xs font-mono bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-1.5 md:px-2 py-0.5 rounded truncate max-w-[140px] md:max-w-none">
                                                         {order.order_number || `#${order.id.slice(-8)}`}
                                                     </span>
                                                     <button
@@ -359,45 +359,45 @@ export function OrderHistoryPage() {
                                                             e.stopPropagation();
                                                             copyOrderNumber(order.order_number || order.id);
                                                         }}
-                                                        className="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition"
+                                                        className="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition flex-shrink-0"
                                                         title="Salin nomor pesanan"
                                                     >
                                                         <Copy className="size-3 text-gray-400" />
                                                     </button>
-                                                    <span className={`text-xs px-2 py-1 rounded-full font-medium ${getStatusColor(order.status)}`}>
+                                                    <span className={`text-[10px] md:text-xs px-2 py-0.5 md:py-1 rounded-full font-medium whitespace-nowrap ${getStatusColor(order.status)}`}>
                                                         {getStatusText(order.status)}
                                                     </span>
                                                 </div>
                                                 {/* Store Name */}
-                                                <div className="flex items-center gap-2 mb-2">
-                                                    <p className="font-semibold text-gray-900 dark:text-white">
+                                                <div className="flex items-center gap-2 mb-1 md:mb-2">
+                                                    <p className="font-semibold text-sm md:text-base text-gray-900 dark:text-white truncate">
                                                         {getBusinessName(order)}
                                                     </p>
                                                 </div>
-                                                <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
+                                                <div className="flex flex-wrap items-center gap-2 md:gap-3 text-xs md:text-sm text-gray-600 dark:text-gray-400">
                                                     <div className="flex items-center gap-1">
-                                                        <Clock className="size-4" />
+                                                        <Clock className="size-3 md:size-4" />
                                                         <span>{formatDate(order.created_at)}</span>
                                                     </div>
                                                     {order.paid_at && (
                                                         <div className="flex items-center gap-1 text-green-600 dark:text-green-400">
-                                                            <CreditCard className="size-4" />
+                                                            <CreditCard className="size-3 md:size-4" />
                                                             <span>Bayar: {formatDate(order.paid_at)}</span>
                                                         </div>
                                                     )}
                                                 </div>
                                             </div>
-                                            <div className="text-right flex items-center gap-2">
+                                            <div className="text-right flex items-center gap-1 md:gap-2 flex-shrink-0">
                                                 <div>
-                                                    <p className="text-xs text-gray-500 dark:text-gray-400">Total</p>
-                                                    <p className="font-bold text-indigo-600 dark:text-indigo-400">
+                                                    <p className="text-[10px] md:text-xs text-gray-500 dark:text-gray-400">Total</p>
+                                                    <p className="font-bold text-sm md:text-base text-indigo-600 dark:text-indigo-400">
                                                         {formatCurrency(order.total_harga)}
                                                     </p>
                                                 </div>
                                                 {isExpanded ? (
-                                                    <ChevronUp className="size-5 text-gray-400" />
+                                                    <ChevronUp className="size-4 md:size-5 text-gray-400" />
                                                 ) : (
-                                                    <ChevronDown className="size-5 text-gray-400" />
+                                                    <ChevronDown className="size-4 md:size-5 text-gray-400" />
                                                 )}
                                             </div>
                                         </div>
@@ -553,7 +553,7 @@ export function OrderHistoryPage() {
                                             )}
 
                                             {/* Action Buttons */}
-                                            <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex flex-wrap gap-2">
+                                            <div className="p-3 md:p-4 border-t border-gray-200 dark:border-gray-700 flex flex-wrap gap-1.5 md:gap-2">
                                                 {/* WhatsApp Button - Always show */}
                                                 <Button
                                                     onClick={(e) => { e.stopPropagation(); handleResendWhatsApp(order); }}
@@ -643,7 +643,7 @@ export function OrderHistoryPage() {
             {/* Image Preview Modal */}
             {previewImageUrl && (
                 <div
-                    className="fixed inset-0 bg-black/80 flex items-center justify-center z-[100] p-4"
+                    className="fixed inset-0 bg-black/80 flex items-center justify-center z-[100] p-2 md:p-4"
                     onClick={() => setPreviewImageUrl(null)}
                 >
                     <div className="max-w-4xl max-h-[90vh] relative">

@@ -566,51 +566,51 @@ export function UMKMDashboard({
   // Page mode: render without modal overlay
   if (asPage) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg">
-          <div className="border-b dark:border-gray-700 p-6">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Dashboard UMKM</h2>
-            <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">Kelola toko dan produk Anda</p>
+          <div className="border-b dark:border-gray-700 p-4 sm:p-6">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Dashboard UMKM</h2>
+            <p className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm mt-1">Kelola toko dan produk Anda</p>
           </div>
 
-          <div className="p-6">
+          <div className="p-3 sm:p-6">
             {/* Tabs */}
-            <div className="flex flex-wrap gap-2 mb-6 justify-between items-center">
-              <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-2 mb-6 sm:justify-between sm:items-center">
+              <div className="flex flex-wrap gap-2">
                 <button
                   onClick={() => setActiveTab("businesses")}
-                  className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-colors ${activeTab === "businesses"
+                  className={`px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1.5 sm:gap-2 transition-colors text-sm sm:text-base ${activeTab === "businesses"
                     ? "bg-indigo-600 text-white"
                     : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
                     }`}
                 >
-                  <StoreIcon className="size-5" />
+                  <StoreIcon className="size-4 sm:size-5" />
                   Toko Saya ({businesses.length})
                 </button>
                 <button
                   onClick={() => setActiveTab("products")}
-                  className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-colors ${activeTab === "products"
+                  className={`px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1.5 sm:gap-2 transition-colors text-sm sm:text-base ${activeTab === "products"
                     ? "bg-indigo-600 text-white"
                     : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
                     }`}
                 >
-                  <Package className="size-5" />
+                  <Package className="size-4 sm:size-5" />
                   Produk ({products.length})
                 </button>
                 <button
                   onClick={() => setActiveTab("packages")}
-                  className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-colors ${activeTab === "packages"
+                  className={`px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1.5 sm:gap-2 transition-colors text-sm sm:text-base ${activeTab === "packages"
                     ? "bg-indigo-600 text-white"
                     : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
                     }`}
                 >
-                  <Gift className="size-5" />
+                  <Gift className="size-4 sm:size-5" />
                   Paket Saya ({myPackages.length})
                 </button>
               </div>
 
               {/* NEW: Action Buttons */}
-              <div className="flex gap-2 flex-wrap">
+              <div className="flex gap-2 flex-wrap w-full sm:w-auto">
                 <button
                   onClick={() => setShowRejectionComments(true)}
                   className="px-4 py-2 rounded-lg flex items-center gap-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors text-sm"
@@ -658,16 +658,16 @@ export function UMKMDashboard({
                     {businesses.map((business) => (
                       <div
                         key={business.id}
-                        className="border border-gray-200 dark:border-gray-600 rounded-xl p-6 bg-white dark:bg-gray-700"
+                        className="border border-gray-200 dark:border-gray-600 rounded-xl p-4 sm:p-6 bg-white dark:bg-gray-700"
                       >
                         {/* Store Header with Image */}
-                        <div className="flex flex-col md:flex-row gap-6 mb-6">
-                          <div className="flex-shrink-0">
+                        <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 mb-4 sm:mb-6">
+                          <div className="flex-shrink-0 flex justify-center sm:justify-start">
                             <div className="relative">
                               <img
                                 src={editingBusiness?.id === business.id ? editingBusiness.image : business.image}
                                 alt={business.name}
-                                className="w-32 h-32 object-cover rounded-xl border-2 border-gray-200 dark:border-gray-600"
+                                className="w-24 h-24 sm:w-32 sm:h-32 object-cover rounded-xl border-2 border-gray-200 dark:border-gray-600"
                               />
                               {editingBusiness?.id === business.id && (
                                 <label className="absolute bottom-2 right-2 p-2 bg-indigo-600 text-white rounded-full cursor-pointer hover:bg-indigo-700 transition-colors">
@@ -738,7 +738,7 @@ export function UMKMDashboard({
                         </div>
 
                         {/* Contact & Social */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                           <div>
                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                               <MessageCircle className="size-4 inline mr-1" /> WhatsApp
@@ -778,7 +778,7 @@ export function UMKMDashboard({
                           <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
                             💳 Informasi Rekening Bank
                           </h4>
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             <div>
                               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                 Nama Bank
@@ -889,7 +889,7 @@ export function UMKMDashboard({
                         </div>
 
                         {/* Action Buttons */}
-                        <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-600">
+                        <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 pt-4 border-t border-gray-200 dark:border-gray-600">
                           {editingBusiness?.id === business.id ? (
                             <>
                               <button
@@ -1310,7 +1310,7 @@ export function UMKMDashboard({
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Tanggal Mulai
@@ -1373,7 +1373,7 @@ export function UMKMDashboard({
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white dark:bg-gray-800 border-b dark:border-gray-700 p-6 flex items-center justify-between z-10 rounded-t-2xl">
+        <div className="sticky top-0 bg-white dark:bg-gray-800 border-b dark:border-gray-700 p-4 sm:p-6 flex items-center justify-between z-10 rounded-t-2xl">
           <div>
             <h2 className="mb-1 text-gray-900 dark:text-white">Dashboard UMKM</h2>
             <p className="text-gray-600 dark:text-gray-400 text-sm">Kelola toko dan produk Anda</p>
@@ -1386,44 +1386,44 @@ export function UMKMDashboard({
           </button>
         </div>
 
-        <div className="p-6">
+        <div className="p-3 sm:p-6">
           {/* Tabs */}
-          <div className="flex flex-wrap gap-2 mb-6 justify-between items-center">
-            <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-2 mb-6 sm:justify-between sm:items-center">
+            <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => setActiveTab("businesses")}
-                className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-colors ${activeTab === "businesses"
+                className={`px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1.5 sm:gap-2 transition-colors text-sm sm:text-base ${activeTab === "businesses"
                   ? "bg-indigo-600 text-white"
                   : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
                   }`}
               >
-                <StoreIcon className="size-5" />
+                <StoreIcon className="size-4 sm:size-5" />
                 Toko Saya ({businesses.length})
               </button>
               <button
                 onClick={() => setActiveTab("products")}
-                className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-colors ${activeTab === "products"
+                className={`px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1.5 sm:gap-2 transition-colors text-sm sm:text-base ${activeTab === "products"
                   ? "bg-indigo-600 text-white"
                   : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
                   }`}
               >
-                <Package className="size-5" />
+                <Package className="size-4 sm:size-5" />
                 Produk ({products.length})
               </button>
               <button
                 onClick={() => setActiveTab("packages")}
-                className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-colors ${activeTab === "packages"
+                className={`px-3 sm:px-4 py-2 rounded-lg flex items-center gap-1.5 sm:gap-2 transition-colors text-sm sm:text-base ${activeTab === "packages"
                   ? "bg-indigo-600 text-white"
                   : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
                   }`}
               >
-                <Gift className="size-5" />
+                <Gift className="size-4 sm:size-5" />
                 Paket Saya ({myPackages.length})
               </button>
             </div>
 
             {/* NEW: Action Buttons */}
-            <div className="flex gap-2 flex-wrap">
+            <div className="flex gap-2 flex-wrap w-full sm:w-auto">
               <button
                 onClick={() => setShowRejectionComments(true)}
                 className="px-4 py-2 rounded-lg flex items-center gap-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors text-sm"
@@ -1953,7 +1953,7 @@ export function UMKMDashboard({
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-2">
                     WhatsApp
@@ -2003,7 +2003,7 @@ export function UMKMDashboard({
                 <p className="text-xs text-gray-500 mb-4">
                   Info rekening akan ditampilkan ke pembeli saat checkout
                 </p>
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-sm font-medium mb-2">
                       Nama Bank
@@ -2178,7 +2178,7 @@ export function UMKMDashboard({
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-2">
                     Harga (Rp)
