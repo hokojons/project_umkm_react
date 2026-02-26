@@ -15,6 +15,7 @@ class CategoryController extends Controller
             // Try using categories table first
             $categories = DB::table('categories')
                 ->select('id', 'nama_kategori')
+                ->distinct()
                 ->get();
 
             // If empty, fallback to tkategori table

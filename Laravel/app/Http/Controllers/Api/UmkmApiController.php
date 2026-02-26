@@ -39,6 +39,7 @@ class UmkmApiController extends Controller
                     'categories.nama_kategori as kategori',
                     'users.nama_lengkap'
                 )
+                ->distinct()
                 ->get();
 
             // Batch fetch all products for active UMKM in ONE query (fixes N+1)

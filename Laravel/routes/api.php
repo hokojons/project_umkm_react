@@ -337,3 +337,58 @@ Route::get('/uploads/{path}', function ($path) {
     ]);
 })->where('path', '.*');
 
+// TEMPORARY: Cleanup duplicate categories - REMOVE AFTER USE
+Route::get('/cleanup-duplicate-categories', function () {
+    try {
+        // Find duplicate categories (same id, same nama_kategori)
+        $duplicates = \Illuminate\Support\Facades\DB::select("
+            SELECT id, nama_kategori, COUNT(*) as cnt 
+            FROM categories 
+            GROUP BY id, nama_kategori 
+            HAVING COUNT(*) > 1
+        ");
+        
+        $deletedCount = 0;
+        
+        foreach ($duplicates as $dup) {
+            // Keep the first row (by internal rowid), delete the rest
+            // Get all rows with this id and nama_kategori
+            $rows = \Illuminate\Support\Facades\DB::table('categories')
+                ->where('id', $dup->id)
+                ->where('nama_kategori', $dup->nama_kategori)
+                ->get();
+            
+            // Skip the first one, delete the rest
+            $skip = true;
+            foreach ($rows as $row) {
+                if ($skip) {
+                    $skip = false;
+                    continue;
+                }
+                \Illuminate\Support\Facades\DB::table('categories')
+                    ->where('id', $row->id)
+                    ->where('nama_kategori', $row->nama_kategori)
+                    ->limit(1)
+                    ->delete();
+                $deletedCount++;
+            }
+        }
+        
+        // Verify after cleanup
+        $remaining = \Illuminate\Support\Facades\DB::table('categories')->get();
+        
+        return response()->json([
+            'success' => true,
+            'message' => "Cleanup complete. Deleted {$deletedCount} duplicate category rows.",
+            'duplicates_found' => count($duplicates),
+            'deleted_count' => $deletedCount,
+            'remaining_categories' => $remaining
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'error' => $e->getMessage()
+        ], 500);
+    }
+});
+
