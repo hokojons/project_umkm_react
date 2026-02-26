@@ -1404,11 +1404,11 @@ export function AdminPanel({ isOpen, onClose, onDataUpdate }: AdminPanelProps) {
                 </div>
               </div>
             ) : activeTab === "events" ? (
-              <div className="bg-white dark:bg-gray-800 rounded-lg p-6">
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-3 sm:p-6">
                 <EventManagement />
               </div>
             ) : activeTab === "giftPackages" ? (
-              <div className="bg-white dark:bg-gray-800 rounded-lg p-6">
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-3 sm:p-6">
                 <GiftPackageManagement />
               </div>
             ) : activeTab === "siteSettings" ? (

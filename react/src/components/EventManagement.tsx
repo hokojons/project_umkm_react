@@ -518,7 +518,7 @@ export function EventManagement({ onClose }: EventManagementProps) {
             )}
 
             {/* Contact Info */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
                 <h4 className="font-semibold mb-2 dark:text-white">Kontak</h4>
                 {selectedUMKMDetail.whatsapp && (
@@ -683,7 +683,7 @@ export function EventManagement({ onClose }: EventManagementProps) {
           <div className="p-6 space-y-6">
             {/* Submission Info */}
             <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-gray-500 dark:text-gray-400">Email</p>
                   <p className="font-medium dark:text-white">{selectedApplicationDetail.umkmEmail || selectedApplicationDetail.email || '-'}</p>
@@ -1100,7 +1100,7 @@ export function EventManagement({ onClose }: EventManagementProps) {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium mb-2 dark:text-gray-200">Tanggal Event</label>
               <input
@@ -1325,27 +1325,27 @@ export function EventManagement({ onClose }: EventManagementProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h2 className="mb-2 text-gray-900 dark:text-white">Event Management</h2>
-          <p className="text-gray-600 dark:text-gray-400">
+          <h2 className="mb-1 sm:mb-2 text-gray-900 dark:text-white text-lg sm:text-xl">Event Management</h2>
+          <p className="text-sm text-gray-600 dark:text-gray-400">
             {upcomingEvents.length} mendatang • {completedEvents.length} selesai
           </p>
         </div>
         <button
           onClick={() => setShowEventForm(true)}
-          className="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors flex items-center gap-2"
+          className="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors flex items-center gap-2 self-start sm:self-auto text-sm sm:text-base"
         >
-          <Plus className="size-5" />
+          <Plus className="size-4 sm:size-5" />
           Buat Event
         </button>
       </div>
 
       {/* Tabs for filtering */}
-      <div className="flex gap-2 border-b border-gray-200 dark:border-gray-600">
+      <div className="flex gap-1 sm:gap-2 border-b border-gray-200 dark:border-gray-600 overflow-x-auto">
         <button
           onClick={() => setActiveTab("upcoming")}
-          className={`px-4 py-2 font-medium text-sm border-b-2 transition-colors ${activeTab === "upcoming"
+          className={`px-3 sm:px-4 py-2 font-medium text-xs sm:text-sm border-b-2 transition-colors whitespace-nowrap ${activeTab === "upcoming"
             ? "border-orange-500 text-orange-600 dark:text-orange-400"
             : "border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
             }`}
@@ -1354,7 +1354,7 @@ export function EventManagement({ onClose }: EventManagementProps) {
         </button>
         <button
           onClick={() => setActiveTab("completed")}
-          className={`px-4 py-2 font-medium text-sm border-b-2 transition-colors ${activeTab === "completed"
+          className={`px-3 sm:px-4 py-2 font-medium text-xs sm:text-sm border-b-2 transition-colors whitespace-nowrap ${activeTab === "completed"
             ? "border-orange-500 text-orange-600 dark:text-orange-400"
             : "border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
             }`}
@@ -1389,36 +1389,36 @@ export function EventManagement({ onClose }: EventManagementProps) {
           {filteredEvents.map((event) => (
             <div
               key={event.id}
-              className={`bg-white dark:bg-gray-700 border rounded-lg p-6 hover:shadow-md transition-shadow ${event.is_expired
+              className={`bg-white dark:bg-gray-700 border rounded-lg p-4 sm:p-6 hover:shadow-md transition-shadow ${event.is_expired
                 ? "border-gray-300 dark:border-gray-500 opacity-75"
                 : "border-gray-200 dark:border-gray-600"
                 }`}
             >
-              <div className="flex gap-4">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
                 {event.image && (
                   <img
                     src={getImageUrl(event.image)}
                     alt={event.name}
-                    className={`w-32 h-32 object-cover rounded-lg ${event.is_expired ? "grayscale" : ""}`}
+                    className={`w-full sm:w-32 h-40 sm:h-32 object-cover rounded-lg ${event.is_expired ? "grayscale" : ""}`}
                     onError={(e) => {
                       e.currentTarget.src = "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=400&q=80";
                     }}
                   />
                 )}
-                <div className="flex-1">
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <h3 className="mb-1 text-gray-900 dark:text-white">{event.name}</h3>
-                      <div className="flex gap-2 flex-wrap">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <div className="min-w-0 flex-1">
+                      <h3 className="mb-1 text-gray-900 dark:text-white text-sm sm:text-base">{event.name}</h3>
+                      <div className="flex gap-1.5 sm:gap-2 flex-wrap">
                         {/* Expired badge - show prominently if event has passed */}
                         {event.is_expired && (
-                          <span className="inline-block px-2 py-1 rounded text-xs bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300">
+                          <span className="inline-block px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-[10px] sm:text-xs bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300">
                             ⏰ Sudah Lewat
                           </span>
                         )}
                         {/* Status badge */}
                         <span
-                          className={`inline-block px-2 py-1 rounded text-xs ${event.is_expired
+                          className={`inline-block px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-[10px] sm:text-xs ${event.is_expired
                             ? "bg-gray-100 text-gray-700 dark:bg-gray-600 dark:text-gray-300"
                             : event.status === "upcoming" || event.status === "active"
                               ? "bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300"
@@ -1437,41 +1437,41 @@ export function EventManagement({ onClose }: EventManagementProps) {
                         </span>
                       </div>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-1 sm:gap-2 flex-shrink-0">
                       <button
                         onClick={() => handleViewApplications(event)}
-                        className="p-2 text-orange-600 hover:bg-orange-50 dark:text-orange-400 dark:hover:bg-orange-900/30 rounded-lg transition-colors"
+                        className="p-1.5 sm:p-2 text-orange-600 hover:bg-orange-50 dark:text-orange-400 dark:hover:bg-orange-900/30 rounded-lg transition-colors"
                         title="Lihat Aplikasi"
                       >
-                        <Eye className="size-5" />
+                        <Eye className="size-4 sm:size-5" />
                       </button>
                       <button
                         onClick={() => handleEditEvent(event)}
-                        className="p-2 text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
+                        className="p-1.5 sm:p-2 text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
                         title="Edit"
                       >
-                        <Edit2 className="size-5" />
+                        <Edit2 className="size-4 sm:size-5" />
                       </button>
                       <button
                         onClick={() => handleDeleteEvent(event.id)}
-                        className="p-2 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/30 rounded-lg transition-colors"
+                        className="p-1.5 sm:p-2 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/30 rounded-lg transition-colors"
                         title="Hapus"
                       >
-                        <Trash2 className="size-5" />
+                        <Trash2 className="size-4 sm:size-5" />
                       </button>
                     </div>
                   </div>
-                  <p className="text-gray-600 dark:text-gray-300 text-sm mb-3">
+                  <p className="text-gray-600 dark:text-gray-300 text-xs sm:text-sm mb-2 sm:mb-3 line-clamp-3 sm:line-clamp-none">
                     {event.description}
                   </p>
-                  <div className="flex gap-4 text-sm text-gray-500 dark:text-gray-400">
+                  <div className="flex flex-wrap gap-2 sm:gap-4 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                     <div className="flex items-center gap-1">
-                      <Calendar className="size-4" />
+                      <Calendar className="size-3.5 sm:size-4" />
                       {formatDate(event.date)}
                     </div>
                     <div className="flex items-center gap-1">
-                      <MapPin className="size-4" />
-                      {event.location}
+                      <MapPin className="size-3.5 sm:size-4" />
+                      <span className="truncate max-w-[150px] sm:max-w-none">{event.location}</span>
                     </div>
                   </div>
                 </div>
