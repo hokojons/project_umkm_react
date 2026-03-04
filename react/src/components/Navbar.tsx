@@ -129,7 +129,7 @@ export function Navbar({
           >
             {settings.siteLogo ? (
               <img
-                src={settings.siteLogo.startsWith('http') ? settings.siteLogo : `${BASE_HOST}/${settings.siteLogo}`}
+                src={settings.siteLogo.startsWith('data:') || settings.siteLogo.startsWith('http') ? settings.siteLogo : `${BASE_HOST}/${settings.siteLogo}`}
                 alt={settings.siteName}
                 className="w-8 h-8 md:w-10 md:h-10 rounded-xl object-contain flex-shrink-0"
               />

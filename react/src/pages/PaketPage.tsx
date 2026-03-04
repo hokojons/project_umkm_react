@@ -89,6 +89,11 @@ export function PaketPage() {
             }
 
             // 2) Products with kategori "Paket" from UMKM stores
+            // Build a set of existing gift package names to avoid duplicates
+            const existingNames = new Set(
+                allPackages.map((p) => (p.name || "").toLowerCase().trim())
+            );
+
             if (umkmRes) {
                 const umkmData = await umkmRes.json();
                 if (umkmData.success && Array.isArray(umkmData.data)) {
@@ -96,32 +101,37 @@ export function PaketPage() {
                         if (!umkm.products) continue;
                         for (const product of umkm.products) {
                             const cat = (product.kategori || "").toLowerCase();
-                            if (cat === "paket") {
-                                // Map product to GiftPackage shape
-                                let imgUrl = product.gambar || "";
-                                if (imgUrl && !imgUrl.startsWith("data:") && !imgUrl.startsWith("http")) {
-                                    imgUrl = `${BASE_HOST}/${imgUrl}`;
-                                }
+                            if (cat !== "paket") continue;
 
-                                allPackages.push({
-                                    id: `product_${product.id}`,
-                                    name: product.nama_produk || "Paket",
-                                    description: product.deskripsi || "",
-                                    price: parseFloat(product.harga) || 0,
-                                    category: "Paket",
-                                    image: imgUrl,
-                                    items: product.deskripsi
-                                        ? product.deskripsi.split(/[-–•]/).map((s: string) => s.trim()).filter(Boolean)
-                                        : [],
-                                    createdAt: product.created_at || "",
-                                    stok: product.stok ?? 0,
-                                    umkm: {
-                                        id: umkm.id,
-                                        nama_toko: umkm.nama_toko || "Toko UMKM",
-                                        nama_pemilik: umkm.nama_pemilik || "",
-                                    },
-                                });
+                            // Skip if a gift package with same name already exists
+                            const prodName = (product.nama_produk || "").toLowerCase().trim();
+                            if (existingNames.has(prodName)) continue;
+
+                            // Map product to GiftPackage shape
+                            let imgUrl = product.gambar || "";
+                            if (imgUrl && !imgUrl.startsWith("data:") && !imgUrl.startsWith("http")) {
+                                imgUrl = `${BASE_HOST}/${imgUrl}`;
                             }
+
+                            allPackages.push({
+                                id: `product_${product.id}`,
+                                name: product.nama_produk || "Paket",
+                                description: product.deskripsi || "",
+                                price: parseFloat(product.harga) || 0,
+                                category: "Paket",
+                                image: imgUrl,
+                                items: product.deskripsi
+                                    ? product.deskripsi.split(/[-–•]/).map((s: string) => s.trim()).filter(Boolean)
+                                    : [],
+                                createdAt: product.created_at || "",
+                                stok: product.stok ?? 0,
+                                umkm: {
+                                    id: umkm.id,
+                                    nama_toko: umkm.nama_toko || "Toko UMKM",
+                                    nama_pemilik: umkm.nama_pemilik || "",
+                                },
+                            });
+                            existingNames.add(prodName);
                         }
                     }
                 }
