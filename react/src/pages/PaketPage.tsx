@@ -72,15 +72,64 @@ export function PaketPage() {
     const loadPackages = async () => {
         setLoading(true);
         try {
-            const response = await fetch(`${API_BASE_URL}/gift-packages`);
-            const data = await response.json();
-            if (data.success && Array.isArray(data.data)) {
-                setPackages(data.data);
-            } else {
-                setPackages([]);
+            // Fetch both gift-packages and regular products in parallel
+            const [giftRes, umkmRes] = await Promise.all([
+                fetch(`${API_BASE_URL}/gift-packages`).catch(() => null),
+                fetch(`${API_BASE_URL}/umkm`).catch(() => null),
+            ]);
+
+            let allPackages: GiftPackage[] = [];
+
+            // 1) Gift packages from dedicated table
+            if (giftRes) {
+                const giftData = await giftRes.json();
+                if (giftData.success && Array.isArray(giftData.data)) {
+                    allPackages = [...giftData.data];
+                }
             }
+
+            // 2) Products with kategori "Paket" from UMKM stores
+            if (umkmRes) {
+                const umkmData = await umkmRes.json();
+                if (umkmData.success && Array.isArray(umkmData.data)) {
+                    for (const umkm of umkmData.data) {
+                        if (!umkm.products) continue;
+                        for (const product of umkm.products) {
+                            const cat = (product.kategori || "").toLowerCase();
+                            if (cat === "paket") {
+                                // Map product to GiftPackage shape
+                                let imgUrl = product.gambar || "";
+                                if (imgUrl && !imgUrl.startsWith("data:") && !imgUrl.startsWith("http")) {
+                                    imgUrl = `${BASE_HOST}/${imgUrl}`;
+                                }
+
+                                allPackages.push({
+                                    id: `product_${product.id}`,
+                                    name: product.nama_produk || "Paket",
+                                    description: product.deskripsi || "",
+                                    price: parseFloat(product.harga) || 0,
+                                    category: "Paket",
+                                    image: imgUrl,
+                                    items: product.deskripsi
+                                        ? product.deskripsi.split(/[-–•]/).map((s: string) => s.trim()).filter(Boolean)
+                                        : [],
+                                    createdAt: product.created_at || "",
+                                    stok: product.stok ?? 0,
+                                    umkm: {
+                                        id: umkm.id,
+                                        nama_toko: umkm.nama_toko || "Toko UMKM",
+                                        nama_pemilik: umkm.nama_pemilik || "",
+                                    },
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+
+            setPackages(allPackages);
         } catch (error) {
-            console.error("Error loading gift packages:", error);
+            console.error("Error loading packages:", error);
             setPackages([]);
         } finally {
             setLoading(false);
@@ -89,7 +138,7 @@ export function PaketPage() {
 
     const handleAddToCart = (pkg: GiftPackage) => {
         let imageUrl = pkg.image;
-        if (pkg.image && !(pkg.image.startsWith("http://") || pkg.image.startsWith("https://"))) {
+        if (pkg.image && !pkg.image.startsWith("data:") && !(pkg.image.startsWith("http://") || pkg.image.startsWith("https://"))) {
             imageUrl = `${BASE_HOST}/${pkg.image}`;
         }
         addToCart(
@@ -193,7 +242,7 @@ export function PaketPage() {
                                     <div className="relative h-48 overflow-hidden">
                                         <img
                                             src={
-                                                pkg.image && (pkg.image.startsWith("http://") || pkg.image.startsWith("https://"))
+                                                pkg.image && (pkg.image.startsWith("data:") || pkg.image.startsWith("http://") || pkg.image.startsWith("https://"))
                                                     ? pkg.image
                                                     : pkg.image ? `${BASE_HOST}/${pkg.image}` : "/api/placeholder/400/300"
                                             }
@@ -289,7 +338,7 @@ export function PaketPage() {
                         <div className="relative h-64 md:h-80">
                             <img
                                 src={
-                                    selectedPackage.image && (selectedPackage.image.startsWith("http://") || selectedPackage.image.startsWith("https://"))
+                                    selectedPackage.image && (selectedPackage.image.startsWith("data:") || selectedPackage.image.startsWith("http://") || selectedPackage.image.startsWith("https://"))
                                         ? selectedPackage.image
                                         : selectedPackage.image ? `${BASE_HOST}/${selectedPackage.image}` : "/api/placeholder/400/300"
                                 }
