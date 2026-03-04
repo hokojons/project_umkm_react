@@ -65,7 +65,7 @@ export function ProductCard({ product, businessName, businessId, onBuyNow }: Pro
         ) : (
           <img
             src={
-              product.image?.startsWith('http://') || product.image?.startsWith('https://')
+              product.image?.startsWith('data:') || product.image?.startsWith('http://') || product.image?.startsWith('https://')
                 ? product.image
                 : `${BASE_HOST}/${product.image}`
             }
