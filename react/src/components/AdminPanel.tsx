@@ -538,7 +538,7 @@ export function AdminPanel({ isOpen, onClose, onDataUpdate }: AdminPanelProps) {
               setSiteSettingsForm({
                 siteName: data.data.site_name || 'Pasar UMKM',
                 logoFile: null,
-                logoPreview: data.data.site_logo ? (data.data.site_logo.startsWith('http') ? data.data.site_logo : `${BASE_HOST}/${data.data.site_logo}`) : '',
+                logoPreview: data.data.site_logo ? (data.data.site_logo.startsWith('data:') || data.data.site_logo.startsWith('http') ? data.data.site_logo : `${BASE_HOST}/${data.data.site_logo}`) : '',
               });
             }
           })
@@ -1866,7 +1866,7 @@ export function AdminPanel({ isOpen, onClose, onDataUpdate }: AdminPanelProps) {
                                               {product.image && (
                                                 <img
                                                   src={
-                                                    product.image.startsWith('http://') || product.image.startsWith('https://')
+                                                    product.image.startsWith('data:') || product.image.startsWith('http://') || product.image.startsWith('https://')
                                                       ? product.image
                                                       : `${BASE_HOST}/${product.image}`
                                                   }
@@ -1901,7 +1901,7 @@ export function AdminPanel({ isOpen, onClose, onDataUpdate }: AdminPanelProps) {
                                                 onClick={() => setImageEditModal({
                                                   isOpen: true,
                                                   itemId: Number(product.id),
-                                                  currentImage: product.image?.startsWith('http://') || product.image?.startsWith('https://')
+                                                  currentImage: product.image?.startsWith('data:') || product.image?.startsWith('http://') || product.image?.startsWith('https://')
                                                     ? product.image
                                                     : `${BASE_HOST}/${product.image}`,
                                                   itemType: 'product',
